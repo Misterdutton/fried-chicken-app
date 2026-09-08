@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fried Chicken Grab & Go - Interactive Business Simulator</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  body { font-family: 'Prompt', sans-serif; }
+</style>
+</head>
+<body class="bg-amber-50/40 text-slate-800 min-h-screen">
+
+  <!-- Header Banner -->
+  <header class="bg-gradient-to-r from-amber-700 via-amber-600 to-yellow-600 text-white shadow-lg">
+    <div class="max-w-6xl mx-auto px-4 py-6 flex flex-col md:flex-row items-center justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-3">
+          <span class="text-4xl">🍗</span>
+          <h1 class="text-2xl md:text-3xl font-bold tracking-tight">แผนธุรกิจ & แบบจำลองการเงิน: ไก่ทอด Grab & Go</h1>
+        </div>
+        <p class="text-amber-100 text-sm mt-1">งบลงทุนเริ่มต้น 50,000 บาท • ปรับแก้ตัวเลขเพื่อจำลองกำไรและระยะเวลาคืนทุนได้ทันที</p>
+      </div>
+      <div class="bg-black/20 backdrop-blur-sm px-4 py-2 rounded-xl text-center border border-white/20">
+        <div class="text-xs text-amber-200">งบลงทุนตั้งต้น</div>
+        <div class="text-xl font-bold text-amber-300">฿50,000</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+    
+    <!-- Left Column: Interactive Inputs (Sliders & Controls) -->
+    <div class="lg:col-span-5 space-y-6">
+      
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-amber-100">
+        <h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+          ตั้งค่าสมมติฐานการขาย (Sales Drivers)
+        </h2>
+        
+        <!-- Input 1: Daily cups -->
+        <div class="mb-5">
+          <div class="flex justify-between items-center mb-1">
+            <label class="text-sm font-medium text-slate-700">ยอดขายเฉลี่ยต่อวัน (ชุด)</label>
+            <span id="display_daily_sales" class="text-base font-bold text-amber-600 bg-amber-50 px-2.5 py-0.5 rounded-lg border border-amber-200">60 ชุด</span>
+          </div>
+          <input type="range" id="input_daily_sales" min="15" max="180" step="5" value="60" 
+            class="w-full h-2 bg-amber-200 rounded-lg appearance-none cursor-pointer accent-amber-600" oninput="calculate()">
+          <div class="flex justify-between text-xs text-slate-400 mt-1">
+            <span>15 (ขั้นต่ำ)</span>
+            <span>60 (ปกติ)</span>
+            <span>120+ (ขายดี)</span>
+          </div>
+        </div>
+
+        <!-- Input 2: Selling Price -->
+        <div class="mb-5">
+          <div class="flex justify-between items-center mb-1">
+            <label class="text-sm font-medium text-slate-700">ราคาขายเฉลี่ยต่อชุด (บาท)</label>
+            <span id="display_price" class="text-base font-bold text-amber-600 bg-amber-50 px-2.5 py-0.5 rounded-lg border border-amber-200">฿55.00</span>
+          </div>
+          <input type="range" id="input_price" min="39" max="99" step="1" value="55" 
+            class="w-full h-2 bg-amber-200 rounded-lg appearance-none cursor-pointer accent-amber-600" oninput="calculate()">
+        </div>
+
+        <!-- Input 3: Food & Packaging Cost -->
+        <div class="mb-5">
+          <div class="flex justify-between items-center mb-1">
+            <label class="text-sm font-medium text-slate-700">ต้นทุนเนื้อไก่ + กล่องต่อชุด (บาท)</label>
+            <span id="display_cost" class="text-base font-bold text-rose-600 bg-rose-50 px-2.5 py-0.5 rounded-lg border border-rose-200">฿20.00</span>
+          </div>
+          <input type="range" id="input_cost" min="12" max="45" step="0.5" value="20" 
+            class="w-full h-2 bg-rose-200 rounded-lg appearance-none cursor-pointer accent-rose-600" oninput="calculate()">
+          <div class="text-xs text-slate-500 mt-1">สัดส่วน Food Cost: <span id="food_cost_ratio" class="font-semibold text-slate-700">36.4%</span></div>
+        </div>
+
+        <!-- Input 4: Days open per month -->
+        <div>
+          <div class="flex justify-between items-center mb-1">
+            <label class="text-sm font-medium text-slate-700">วันเปิดขายต่อเดือน (วัน)</label>
+            <span id="display_days" class="text-base font-bold text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded-lg">26 วัน</span>
+          </div>
+          <input type="range" id="input_days" min="20" max="30" step="1" value="26" 
+            class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-700" oninput="calculate()">
+        </div>
+
+      </div>
+
+      <!-- Fixed Costs Card -->
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-amber-100">
+        <h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-slate-700"></span>
+          ต้นทุนคงที่รายเดือน (Fixed Monthly Expenses)
+        </h2>
+        
+        <div class="space-y-3 text-sm">
+          <div class="flex justify-between items-center">
+            <span class="text-slate-600">ค่าเช่าพื้นที่ทำเล Grab & Go</span>
+            <input type="number" id="input_rent" value="7000" step="500" class="w-28 text-right font-medium bg-blue-50 border border-blue-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-amber-500" oninput="calculate()">
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-600">ค่าน้ำ ค่าไฟ แก๊สหุงต้ม</span>
+            <input type="number" id="input_utilities" value="2500" step="100" class="w-28 text-right font-medium bg-blue-50 border border-blue-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-amber-500" oninput="calculate()">
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-600">ค่าการตลาด / ทำคลิป TikTok</span>
+            <input type="number" id="input_marketing" value="1000" step="100" class="w-28 text-right font-medium bg-blue-50 border border-blue-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-amber-500" oninput="calculate()">
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-600">เบ็ดเตล็ด / ถุงหิ้ว / อุปกรณ์ล้าง</span>
+            <input type="number" id="input_misc" value="1200" step="100" class="w-28 text-right font-medium bg-blue-50 border border-blue-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-amber-500" oninput="calculate()">
+          </div>
+          <div class="pt-2 border-t border-slate-100 flex justify-between items-center font-bold text-slate-800">
+            <span>รวมต้นทุนคงที่ต่อเดือน</span>
+            <span id="display_total_fixed" class="text-amber-700">฿11,700</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Column: Realtime Dashboard & Key Metrics -->
+    <div class="lg:col-span-7 space-y-6">
+      
+      <!-- Key KPI Highlight Cards -->
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+        
+        <div class="bg-gradient-to-br from-emerald-500 to-teal-600 text-white p-4 rounded-2xl shadow-sm">
+          <div class="text-xs text-emerald-100 font-medium">กำไรสุทธิต่อเดือน</div>
+          <div id="kpi_profit" class="text-2xl font-extrabold mt-1">฿42,900</div>
+          <div class="text-[11px] text-emerald-100 mt-1" id="kpi_margin">Margin: 50.0%</div>
+        </div>
+
+        <div class="bg-gradient-to-br from-amber-500 to-yellow-600 text-white p-4 rounded-2xl shadow-sm">
+          <div class="text-xs text-amber-100 font-medium">จุดคุ้มทุนต่อวัน</div>
+          <div id="kpi_be_day" class="text-2xl font-extrabold mt-1">13 ชุด/วัน</div>
+          <div class="text-[11px] text-amber-100 mt-1" id="kpi_be_month">335 ชุด/เดือน</div>
+        </div>
+
+        <div class="bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-4 rounded-2xl shadow-sm col-span-2 md:col-span-1">
+          <div class="text-xs text-blue-100 font-medium">ระยะเวลาคืนทุน 50k</div>
+          <div id="kpi_payback" class="text-2xl font-extrabold mt-1">1.2 เดือน</div>
+          <div class="text-[11px] text-blue-100 mt-1">งบลงทุน 50,000 บ.</div>
+        </div>
+
+      </div>
+
+      <!-- Financial P&L Breakdown Table -->
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-amber-100">
+        <h3 class="text-base font-bold text-slate-900 mb-3 flex items-center justify-between">
+          <span>📊 ประมาณการงบกำไร-ขาดทุนรายเดือน (Pro-Forma P&L)</span>
+          <span class="text-xs font-normal text-slate-500">คำนวณอัตโนมัติ</span>
+        </h3>
+        
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-slate-200 text-slate-500 text-xs">
+                <th class="py-2 text-left font-medium">รายการ</th>
+                <th class="py-2 text-right font-medium">ต่อชุด</th>
+                <th class="py-2 text-right font-medium">ต่อเดือน</th>
+                <th class="py-2 text-right font-medium">% รายได้</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr class="font-semibold text-slate-800">
+                <td class="py-2.5">ยอดขายรวม (Gross Revenue)</td>
+                <td class="py-2.5 text-right" id="row_rev_unit">฿55.00</td>
+                <td class="py-2.5 text-right text-emerald-600 font-bold" id="row_rev_month">฿85,800</td>
+                <td class="py-2.5 text-right">100%</td>
+              </tr>
+              <tr class="text-rose-700">
+                <td class="py-2.5">หัก: ต้นทุนผันแปร (Food & Packaging)</td>
+                <td class="py-2.5 text-right" id="row_cogs_unit">-฿20.00</td>
+                <td class="py-2.5 text-right" id="row_cogs_month">-฿31,200</td>
+                <td class="py-2.5 text-right" id="row_cogs_pct">36.4%</td>
+              </tr>
+              <tr class="bg-amber-50/50 font-semibold text-amber-900">
+                <td class="py-2.5 px-2 rounded-l">กำไรส่วนเกินขั้นต้น (Gross Contribution)</td>
+                <td class="py-2.5 text-right" id="row_gp_unit">฿35.00</td>
+                <td class="py-2.5 text-right" id="row_gp_month">฿54,600</td>
+                <td class="py-2.5 text-right px-2 rounded-r" id="row_gp_pct">63.6%</td>
+              </tr>
+              <tr class="text-slate-600">
+                <td class="py-2.5">หัก: ต้นทุนคงที่ (Fixed Rent & Utilities)</td>
+                <td class="py-2.5 text-right">-</td>
+                <td class="py-2.5 text-right text-rose-600" id="row_fix_month">-฿11,700</td>
+                <td class="py-2.5 text-right" id="row_fix_pct">13.6%</td>
+              </tr>
+              <tr class="border-t-2 border-slate-800 bg-slate-900 text-white font-bold text-base">
+                <td class="py-3 px-3 rounded-l-xl">กำไรสุทธิเจ้าของร้าน (Net Owner Profit)</td>
+                <td class="py-3 text-right text-sm" id="row_net_unit">฿27.50</td>
+                <td class="py-3 text-right text-amber-400" id="row_net_month">฿42,900</td>
+                <td class="py-3 text-right px-3 rounded-r-xl text-sm" id="row_net_pct">50.0%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Actionable Advice & Setup Breakdown -->
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-amber-100">
+        <h3 class="text-base font-bold text-slate-900 mb-3">🍗 แผนจัดสรรงบ 50,000 บาท แนะนำสำหรับ Grab & Go</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+          <div class="p-3 rounded-xl bg-amber-50/60 border border-amber-100">
+            <div class="font-bold text-amber-900">1. เคาน์เตอร์ + ป้าย (7,500 บ.)</div>
+            <div class="text-slate-600 mt-0.5">คีออสพับได้มือสอง + ป้ายไวนิลไฟส่องชัดเจน</div>
+          </div>
+          <div class="p-3 rounded-xl bg-amber-50/60 border border-amber-100">
+            <div class="font-bold text-amber-900">2. เตาทอดไฟฟ้า + ถาดพัก (8,000 บ.)</div>
+            <div class="text-slate-600 mt-0.5">เตาอ่างคู่ปรับอุณหภูมิได้ ทอดกรอบสม่ำเสมอ</div>
+          </div>
+          <div class="p-3 rounded-xl bg-amber-50/60 border border-amber-100">
+            <div class="font-bold text-amber-900">3. ตู้กระจกอุ่นไก่ + ถังแช่ (5,500 บ.)</div>
+            <div class="text-slate-600 mt-0.5">Food Warmer อุ่นพร้อมเสิร์ฟใน 1 นาที</div>
+          </div>
+          <div class="p-3 rounded-xl bg-amber-50/60 border border-amber-100">
+            <div class="font-bold text-amber-900">4. บรรจุภัณฑ์ + วัตถุดิบล็อตแรก (10,500 บ.)</div>
+            <div class="text-slate-600 mt-0.5">ถ้วยกระดาษทรงสูง ซองกันมัน ไก่สด น้ำมัน แป้ง</div>
+          </div>
+          <div class="p-3 rounded-xl bg-amber-50/60 border border-amber-100">
+            <div class="font-bold text-amber-900">5. มัดจำล็อกตลาด/หน้าร้าน (10,000 บ.)</div>
+            <div class="text-slate-600 mt-0.5">เน้นทำเลคนสัญจรหนาแน่น เช่าเดือนแรก+มัดจำ</div>
+          </div>
+          <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200">
+            <div class="font-bold text-emerald-900">6. เงินสำรองหมุนเวียน (8,500 บ.)</div>
+            <div class="text-emerald-700 mt-0.5">เงินทอนและสภาพคล่องฉุกเฉิน 2 สัปดาห์แรก</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    function formatMoney(num) {
+      return '฿' + Number(num).toLocaleString('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    }
+
+    function calculate() {
+      const dailySales = parseFloat(document.getElementById('input_daily_sales').value);
+      const price = parseFloat(document.getElementById('input_price').value);
+      const cost = parseFloat(document.getElementById('input_cost').value);
+      const days = parseFloat(document.getElementById('input_days').value);
+      
+      const rent = parseFloat(document.getElementById('input_rent').value) || 0;
+      const utilities = parseFloat(document.getElementById('input_utilities').value) || 0;
+      const marketing = parseFloat(document.getElementById('input_marketing').value) || 0;
+      const misc = parseFloat(document.getElementById('input_misc').value) || 0;
+      
+      const totalFixed = rent + utilities + marketing + misc;
+      const totalMonthlyUnits = dailySales * days;
+      const totalRevenue = totalMonthlyUnits * price;
+      const totalCOGS = totalMonthlyUnits * cost;
+      const grossProfit = totalRevenue - totalCOGS;
+      const netProfit = grossProfit - totalFixed;
+      
+      const unitMargin = price - cost;
+      const breakEvenUnitsMonth = unitMargin > 0 ? Math.ceil(totalFixed / unitMargin) : 0;
+      const breakEvenUnitsDay = Math.ceil(breakEvenUnitsMonth / days);
+      const paybackMonths = netProfit > 0 ? (50000 / netProfit).toFixed(1) : "N/A";
+      const foodCostRatio = ((cost / price) * 100).toFixed(1);
+      const profitMarginPct = totalRevenue > 0 ? ((netProfit / totalRevenue) * 100).toFixed(1) : 0;
+
+      // Update Controls Display
+      document.getElementById('display_daily_sales').innerText = dailySales + ' ชุด';
+      document.getElementById('display_price').innerText = '฿' + price.toFixed(2);
+      document.getElementById('display_cost').innerText = '฿' + cost.toFixed(2);
+      document.getElementById('display_days').innerText = days + ' วัน';
+      document.getElementById('food_cost_ratio').innerText = foodCostRatio + '%';
+      document.getElementById('display_total_fixed').innerText = formatMoney(totalFixed);
+
+      // Update KPIs
+      const kpiProfitEl = document.getElementById('kpi_profit');
+      kpiProfitEl.innerText = formatMoney(netProfit);
+      if (netProfit < 0) {
+        kpiProfitEl.className = 'text-2xl font-extrabold mt-1 text-rose-200';
+      } else {
+        kpiProfitEl.className = 'text-2xl font-extrabold mt-1 text-white';
+      }
+      document.getElementById('kpi_margin').innerText = 'Margin: ' + profitMarginPct + '%';
+      document.getElementById('kpi_be_day').innerText = breakEvenUnitsDay + ' ชุด/วัน';
+      document.getElementById('kpi_be_month').innerText = breakEvenUnitsMonth.toLocaleString() + ' ชุด/เดือน';
+      document.getElementById('kpi_payback').innerText = (paybackMonths !== "N/A" ? paybackMonths + ' เดือน' : 'ขาดทุน');
+
+      // Update Table
+      document.getElementById('row_rev_unit').innerText = '฿' + price.toFixed(2);
+      document.getElementById('row_rev_month').innerText = formatMoney(totalRevenue);
+      document.getElementById('row_cogs_unit').innerText = '-฿' + cost.toFixed(2);
+      document.getElementById('row_cogs_month').innerText = '-' + formatMoney(totalCOGS);
+      document.getElementById('row_cogs_pct').innerText = foodCostRatio + '%';
+
+      document.getElementById('row_gp_unit').innerText = '฿' + unitMargin.toFixed(2);
+      document.getElementById('row_gp_month').innerText = formatMoney(grossProfit);
+      document.getElementById('row_gp_pct').innerText = ((unitMargin / price) * 100).toFixed(1) + '%';
+
+      document.getElementById('row_fix_month').innerText = '-' + formatMoney(totalFixed);
+      document.getElementById('row_fix_pct').innerText = totalRevenue > 0 ? ((totalFixed / totalRevenue) * 100).toFixed(1) + '%' : '0%';
+
+      const netPerUnit = totalMonthlyUnits > 0 ? (netProfit / totalMonthlyUnits).toFixed(2) : 0;
+      document.getElementById('row_net_unit').innerText = '฿' + netPerUnit;
+      document.getElementById('row_net_month').innerText = formatMoney(netProfit);
+      document.getElementById('row_net_pct').innerText = profitMarginPct + '%';
+    }
+
+    calculate();
+  </script>
+</body>
+</html>
