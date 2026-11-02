@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#b45309">
+<title>บัญชีไก่ทอดหาดใหญ่</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fff8ef; --card:#ffffff; --ink:#2b2118; --muted:#7a6a5c; --line:#f0e2cf;
+  --brand:#b45309; --brand2:#f59e0b; --brand-soft:#fff1dc;
+  --good:#15803d; --good-soft:#e7f6ec; --bad:#c2410c; --bad-soft:#fdece4;
+  --shadow:0 1px 3px rgba(80,50,10,.08);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1a1410; --card:#251d17; --ink:#f6ece1; --muted:#b9a796; --line:#3a2e24;
+    --brand:#f59e0b; --brand2:#fbbf24; --brand-soft:#3a2a15;
+    --good:#4ade80; --good-soft:#163222; --bad:#fb923c; --bad-soft:#3a2016; --shadow:none;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:'Prompt',system-ui,sans-serif;background:var(--bg);color:var(--ink);
+  padding-bottom:calc(76px + env(safe-area-inset-bottom));-webkit-tap-highlight-color:transparent}
+header{background:linear-gradient(135deg,#92400e,#d97706);color:#fff;padding:14px 16px 16px}
+header h1{margin:0;font-size:1.15rem;font-weight:600}
+header .sub{font-size:.8rem;opacity:.85}
+.datebar{display:flex;align-items:center;gap:8px;margin-top:10px}
+.datebar button{background:rgba(255,255,255,.2);border:0;color:#fff;width:40px;height:40px;border-radius:12px;font-size:1.1rem}
+.datebar input{flex:1;min-width:0;height:40px;border-radius:12px;border:0;padding:0 10px;font:inherit;font-size:1rem;background:#fff;color:#2b2118}
+main{max-width:640px;margin:0 auto;padding:12px 16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px;box-shadow:var(--shadow)}
+.card h2{font-size:1rem;margin:0 0 10px;font-weight:600;display:flex;justify-content:space-between;align-items:center}
+.muted{color:var(--muted);font-size:.85rem}
+.summary{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat{border-radius:14px;padding:10px 12px;background:var(--brand-soft)}
+.stat .l{font-size:.78rem;color:var(--muted)}
+.stat .v{font-size:1.25rem;font-weight:700;font-variant-numeric:tabular-nums}
+.stat.wide{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center}
+.stat.good{background:var(--good-soft)} .stat.good .v{color:var(--good)}
+.stat.bad{background:var(--bad-soft)} .stat.bad .v{color:var(--bad)}
+.item{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.item:first-of-type{border-top:0}
+.item .info{flex:1;min-width:0}
+.item .name{font-weight:500}
+.qty{display:flex;align-items:center;gap:6px}
+.qty button{width:44px;height:44px;border-radius:12px;border:0;font-size:1.4rem;font-weight:600;background:var(--brand-soft);color:var(--brand)}
+.qty button.plus{background:var(--brand);color:#fff}
+.qty input{width:56px;height:44px;text-align:center;font:inherit;font-size:1.1rem;font-weight:600;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.chip{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:8px 12px;font:inherit;font-size:.88rem}
+.chip.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+.row{display:flex;gap:8px;margin-bottom:8px}
+.row>*{flex:1;min-width:0}
+input.f,select.f{width:100%;height:46px;border:1px solid var(--line);border-radius:12px;padding:0 12px;font:inherit;font-size:1rem;background:var(--card);color:var(--ink)}
+textarea.f{width:100%;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font:inherit;background:var(--card);color:var(--ink);min-height:60px}
+.btn{height:46px;border:0;border-radius:12px;background:var(--brand);color:#fff;font:inherit;font-weight:600;font-size:1rem;padding:0 16px;width:100%}
+.btn.ghost{background:var(--brand-soft);color:var(--brand)}
+.btn.small{height:36px;font-size:.85rem;width:auto;padding:0 12px}
+.list .li{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-top:1px solid var(--line);gap:8px}
+.list .li:first-child{border-top:0}
+.del{border:0;background:transparent;color:var(--bad);font-size:1.1rem;width:36px;height:36px}
+.num{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+.pos{color:var(--good)} .neg{color:var(--bad)}
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:10}
+nav button{flex:1;border:0;background:transparent;color:var(--muted);font:inherit;font-size:.75rem;padding:8px 0 10px;display:flex;flex-direction:column;align-items:center;gap:2px}
+nav button .ic{font-size:1.35rem}
+nav button.on{color:var(--brand);font-weight:600}
+.tab{display:none} .tab.on{display:block}
+.seg{display:flex;background:var(--brand-soft);border-radius:12px;padding:3px;margin-bottom:12px}
+.seg button{flex:1;border:0;background:transparent;font:inherit;padding:8px 0;border-radius:10px;color:var(--brand)}
+.seg button.on{background:var(--card);font-weight:600;box-shadow:var(--shadow)}
+.chart{width:100%;height:170px;display:block}
+.bar-row{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:.88rem}
+.bar-row .lbl{width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-row .track{flex:1;height:12px;background:var(--brand-soft);border-radius:6px;overflow:hidden}
+.bar-row .fill{height:100%;background:var(--brand2);border-radius:6px}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#2b2118;color:#fff;padding:10px 16px;border-radius:12px;font-size:.9rem;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20}
+.toast.on{opacity:1}
+.empty{text-align:center;color:var(--muted);padding:18px 0;font-size:.9rem}
+.day{cursor:pointer}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🍗 <span id="shopTitle">ไก่ทอดหาดใหญ่</span></h1>
+  <div class="sub">บันทึกยอดขาย • รายจ่าย • กำไร/ขาดทุน</div>
+  <div class="datebar">
+    <button id="prevDay" aria-label="วันก่อน">‹</button>
+    <input type="date" id="date">
+    <button id="nextDay" aria-label="วันถัดไป">›</button>
+  </div>
+</header>
+
+<main>
+  <!-- สรุปวันนี้ (แสดงทุกแท็บของวัน) -->
+  <div class="card" id="dayCard">
+    <div class="summary">
+      <div class="stat"><div class="l">รายรับ</div><div class="v" id="sIncome">0</div></div>
+      <div class="stat"><div class="l">รายจ่าย</div><div class="v" id="sExpense">0</div></div>
+      <div class="stat wide" id="sProfitBox"><div><div class="l" id="sProfitLbl">กำไรวันนี้</div><div class="v" id="sProfit">0</div></div><div class="muted" id="sCount"></div></div>
+    </div>
+  </div>
+
+  <!-- แท็บ: ขาย -->
+  <section class="tab on" id="tab-sell">
+    <div class="card">
+      <h2>ขายวันนี้ <span class="muted">แตะ + เมื่อขายได้</span></h2>
+      <div id="itemList"></div>
+    </div>
+    <div class="card">
+      <h2>บันทึกเพิ่มเติม</h2>
+      <textarea class="f" id="dayNote" placeholder="เช่น ฝนตก ลูกค้าน้อย / มีงานวัดใกล้ร้าน"></textarea>
+    </div>
+  </section>
+
+  <!-- แท็บ: รายจ่าย -->
+  <section class="tab" id="tab-expense">
+    <div class="card">
+      <h2>เพิ่มรายจ่าย</h2>
+      <div class="chips" id="catChips"></div>
+      <div class="row">
+        <input class="f" id="expAmount" type="number" inputmode="decimal" placeholder="จำนวนเงิน (บาท)">
+      </div>
+      <div class="row">
+        <input class="f" id="expNote" placeholder="หมายเหตุ (ไม่บังคับ) เช่น ไก่ 10 กก.">
+      </div>
+      <button class="btn" id="addExp">+ บันทึกรายจ่าย</button>
+    </div>
+    <div class="card">
+      <h2>รายจ่ายวันนี้</h2>
+      <div class="list" id="expList"></div>
+    </div>
+  </section>
+
+  <!-- แท็บ: สรุป -->
+  <section class="tab" id="tab-report">
+    <div class="seg" id="rangeSeg">
+      <button data-r="7" class="on">7 วัน</button>
+      <button data-r="30">30 วัน</button>
+      <button data-r="month">เดือนนี้</button>
+      <button data-r="all">ทั้งหมด</button>
+    </div>
+    <div class="card">
+      <div class="summary">
+        <div class="stat"><div class="l">รายรับรวม</div><div class="v" id="rIncome">0</div></div>
+        <div class="stat"><div class="l">รายจ่ายรวม</div><div class="v" id="rExpense">0</div></div>
+        <div class="stat wide" id="rProfitBox"><div><div class="l" id="rProfitLbl">กำไรสุทธิ</div><div class="v" id="rProfit">0</div></div><div class="muted" id="rDays"></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>กำไร/ขาดทุนรายวัน</h2>
+      <svg class="chart" id="chart" viewBox="0 0 320 170" preserveAspectRatio="none"></svg>
+      <div class="muted" id="chartNote" style="text-align:center"></div>
+    </div>
+    <div class="card">
+      <h2>เมนูขายดี</h2>
+      <div id="topItems"></div>
+    </div>
+    <div class="card">
+      <h2>รายจ่ายแยกหมวด</h2>
+      <div id="expCats"></div>
+    </div>
+    <div class="card">
+      <h2>ประวัติรายวัน <span class="muted">แตะเพื่อเปิด</span></h2>
+      <div class="list" id="history"></div>
+    </div>
+  </section>
+
+  <!-- แท็บ: ตั้งค่า -->
+  <section class="tab" id="tab-settings">
+    <div class="card">
+      <h2>ชื่อร้าน</h2>
+      <input class="f" id="shopName" placeholder="ไก่ทอดหาดใหญ่">
+    </div>
+    <div class="card">
+      <h2>เมนูและราคา</h2>
+      <div class="list" id="prodList"></div>
+      <div class="row" style="margin-top:10px">
+        <input class="f" id="newName" placeholder="ชื่อเมนู">
+        <input class="f" id="newPrice" type="number" inputmode="decimal" placeholder="ราคา" style="max-width:110px">
+      </div>
+      <button class="btn ghost" id="addProd">+ เพิ่มเมนู</button>
+    </div>
+    <div class="card">
+      <h2>หมวดรายจ่าย</h2>
+      <div class="list" id="catList"></div>
+      <div class="row" style="margin-top:10px">
+        <input class="f" id="newCat" placeholder="เช่น ค่าถุง/กล่อง">
+      </div>
+      <button class="btn ghost" id="addCat">+ เพิ่มหมวด</button>
+    </div>
+    <div class="card">
+      <h2>สำรองข้อมูล</h2>
+      <p class="muted" style="margin-top:0">ข้อมูลเก็บในเครื่องนี้ (เบราว์เซอร์นี้) เท่านั้น ควรสำรองไว้เป็นระยะ</p>
+      <div class="row"><button class="btn ghost" id="exportCsv">ส่งออก Excel (CSV)</button></div>
+      <div class="row"><button class="btn ghost" id="exportJson">สำรองข้อมูล (ไฟล์)</button></div>
+      <div class="row"><button class="btn ghost" id="importBtn">กู้คืนจากไฟล์สำรอง</button></div>
+      <input type="file" id="importFile" accept="application/json,.json" hidden>
+    </div>
+  </section>
+</main>
+
+<nav>
+  <button data-tab="sell" class="on"><span class="ic">🍗</span>ขาย</button>
+  <button data-tab="expense"><span class="ic">🧾</span>รายจ่าย</button>
+  <button data-tab="report"><span class="ic">📊</span>สรุป</button>
+  <button data-tab="settings"><span class="ic">⚙️</span>ตั้งค่า</button>
+</nav>
+<div class="toast" id="toast"></div>
+
+<script>
+const KEY = 'hatyai-chicken-v1';
+const DEFAULT = {
+  shopName: 'ไก่ทอดหาดใหญ่',
+  products: [
+    {id:'p1', name:'ไก่ทอด (น่อง/สะโพก)', price:25},
+    {id:'p2', name:'ไก่ทอด (ปีก)', price:20},
+    {id:'p3', name:'ไก่ทอด (อก)', price:30},
+    {id:'p4', name:'ข้าวเหนียว', price:10},
+    {id:'p5', name:'หอมเจียว (ถุง)', price:10},
+    {id:'p6', name:'ชุดไก่+ข้าวเหนียว', price:35},
+  ],
+  categories: ['ไก่สด','น้ำมัน','แป้ง/เครื่องปรุง','หอมแดง','ข้าวเหนียว','แก๊ส','ถุง/กล่อง','ค่าเช่าที่','ค่าแรง','อื่นๆ'],
+  days: {}
+};
+
+let db = load();
+let cur = today();
+let expCat = db.categories[0];
+let range = '7';
+
+function load(){
+  try{
+    const d = JSON.parse(localStorage.getItem(KEY));
+    if (d && d.products) return Object.assign(structuredClone(DEFAULT), d);
+  }catch(e){}
+  return structuredClone(DEFAULT);
+}
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(db)); }
+  catch(e){ toast('บันทึกไม่สำเร็จ: เบราว์เซอร์ไม่อนุญาตให้เก็บข้อมูล'); }
+}
+const $ = id => document.getElementById(id);
+const fmt = n => (Math.round(n*100)/100).toLocaleString('th-TH',{maximumFractionDigits:2});
+const baht = n => '฿' + fmt(n);
+function today(){ const d=new Date(); return iso(d); }
+function iso(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function shift(s,n){ const [y,m,d]=s.split('-').map(Number); return iso(new Date(y,m-1,d+n)); }
+function thDate(s){ const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d).toLocaleDateString('th-TH',{weekday:'short',day:'numeric',month:'short',year:'2-digit'}); }
+function uid(){ return Math.random().toString(36).slice(2,9); }
+function esc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(toast.t); toast.t=setTimeout(()=>t.classList.remove('on'),1600); }
+
+function getDay(date, create){
+  if (!db.days[date] && create) db.days[date] = {items:{}, expenses:[], note:''};
+  return db.days[date] || {items:{}, expenses:[], note:''};
+}
+function cleanDay(date){
+  const d = db.days[date]; if(!d) return;
+  const hasItems = Object.values(d.items).some(i=>i.qty>0);
+  if (!hasItems && !d.expenses.length && !d.note) delete db.days[date];
+}
+function totals(d){
+  let income=0, count=0, expense=0;
+  for (const i of Object.values(d.items)){ income += i.qty*i.price; count += i.qty; }
+  for (const e of d.expenses) expense += e.amount;
+  return {income, expense, profit: income-expense, count};
+}
+function setProfit(box, lbl, val, p, label){
+  box.classList.toggle('good', p>=0); box.classList.toggle('bad', p<0);
+  lbl.textContent = (p>=0 ? 'กำไร' : 'ขาดทุน') + label;
+  val.textContent = baht(Math.abs(p));
+}
+
+/* ---------- Render: day ---------- */
+function renderDay(){
+  $('date').value = cur;
+  const d = getDay(cur);
+  const t = totals(d);
+  $('sIncome').textContent = baht(t.income);
+  $('sExpense').textContent = baht(t.expense);
+  setProfit($('sProfitBox'), $('sProfitLbl'), $('sProfit'), t.profit, cur===today() ? 'วันนี้' : '');
+  $('sCount').textContent = t.count ? `ขายได้ ${fmt(t.count)} ชิ้น` : '';
+
+  // items: current menu + old items recorded that day but deleted from menu
+  const rows = db.products.map(p => ({id:p.id, name:p.name, price: d.items[p.id]?.price ?? p.price, qty: d.items[p.id]?.qty || 0}));
+  for (const [id,i] of Object.entries(d.items)) if (!db.products.find(p=>p.id===id) && i.qty>0) rows.push({id, name:i.name, price:i.price, qty:i.qty});
+  $('itemList').innerHTML = rows.length ? rows.map(r => `
+    <div class="item">
+      <div class="info"><div class="name">${esc(r.name)}</div>
+        <div class="muted">${baht(r.price)} • รวม <span class="num">${baht(r.qty*r.price)}</span></div></div>
+      <div class="qty">
+        <button data-dec="${r.id}" aria-label="ลด">−</button>
+        <input type="number" inputmode="numeric" min="0" value="${r.qty}" data-set="${r.id}">
+        <button class="plus" data-inc="${r.id}" aria-label="เพิ่ม">+</button>
+      </div>
+    </div>`).join('') : '<div class="empty">ยังไม่มีเมนู ไปเพิ่มที่แท็บ ตั้งค่า</div>';
+
+  if (document.activeElement !== $('dayNote')) $('dayNote').value = d.note || '';
+
+  $('expList').innerHTML = d.expenses.length ? d.expenses.map(e => `
+    <div class="li"><div><div>${esc(e.cat)}</div>${e.note?`<div class="muted">${esc(e.note)}</div>`:''}</div>
+    <div style="display:flex;align-items:center"><span class="num">${baht(e.amount)}</span><button class="del" data-delexp="${e.id}" aria-label="ลบ">✕</button></div></div>`).join('')
+    : '<div class="empty">ยังไม่มีรายจ่ายวันนี้</div>';
+}
+
+function setQty(pid, qty){
+  qty = Math.max(0, Math.floor(Number(qty)||0));
+  const d = getDay(cur, true);
+  const p = db.products.find(x=>x.id===pid);
+  const prev = d.items[pid];
+  d.items[pid] = {name: p?.name ?? prev?.name, price: prev?.qty ? prev.price : (p?.price ?? prev?.price ?? 0), qty};
+  if (!qty) delete d.items[pid];
+  cleanDay(cur); save(); renderDay();
+}
+
+/* ---------- Render: expense chips ---------- */
+function renderChips(){
+  if (!db.categories.includes(expCat)) expCat = db.categories[0];
+  $('catChips').innerHTML = db.categories.map(c => `<button class="chip ${c===expCat?'on':''}" data-cat="${esc(c)}">${esc(c)}</button>`).join('');
+}
+
+/* ---------- Render: report ---------- */
+function rangeDates(){
+  const keys = Object.keys(db.days).sort();
+  const t = today();
+  if (range==='all') return keys.length ? daysBetween(keys[0], keys[keys.length-1] > t ? keys[keys.length-1] : t) : [];
+  if (range==='month') return daysBetween(t.slice(0,8)+'01', t);
+  return daysBetween(shift(t, -(Number(range)-1)), t);
+}
+function daysBetween(a,b){ const out=[]; for(let s=a; s<=b; s=shift(s,1)) out.push(s); return out; }
+
+function renderReport(){
+  const dates = rangeDates();
+  let inc=0, exp=0, active=0; const items={}, cats={};
+  const series = dates.map(s => {
+    const d = db.days[s]; if (!d) return {s, p:0, has:false};
+    const t = totals(d); inc+=t.income; exp+=t.expense; active++;
+    for (const i of Object.values(d.items)){ const k=i.name; items[k]=items[k]||{qty:0,amt:0}; items[k].qty+=i.qty; items[k].amt+=i.qty*i.price; }
+    for (const e of d.expenses) cats[e.cat]=(cats[e.cat]||0)+e.amount;
+    return {s, p:t.profit, has:true};
+  });
+  $('rIncome').textContent = baht(inc);
+  $('rExpense').textContent = baht(exp);
+  setProfit($('rProfitBox'), $('rProfitLbl'), $('rProfit'), inc-exp, 'สุทธิ');
+  $('rDays').textContent = active ? `${active} วันที่มีบันทึก • เฉลี่ย ${baht((inc-exp)/active)}/วัน` : '';
+
+  drawChart(series);
+  const topI = Object.entries(items).sort((a,b)=>b[1].qty-a[1].qty);
+  const maxI = topI[0]?.[1].qty || 1;
+  $('topItems').innerHTML = topI.length ? topI.map(([n,v]) => `<div class="bar-row"><span class="lbl">${esc(n)}</span><span class="track"><span class="fill" style="display:block;width:${v.qty/maxI*100}%"></span></span><span class="num">${fmt(v.qty)}</span></div>`).join('') : '<div class="empty">ยังไม่มีข้อมูลการขาย</div>';
+  const topC = Object.entries(cats).sort((a,b)=>b[1]-a[1]);
+  const maxC = topC[0]?.[1] || 1;
+  $('expCats').innerHTML = topC.length ? topC.map(([n,v]) => `<div class="bar-row"><span class="lbl">${esc(n)}</span><span class="track"><span class="fill" style="display:block;width:${v/maxC*100}%;background:var(--bad)"></span></span><span class="num">${baht(v)}</span></div>`).join('') : '<div class="empty">ยังไม่มีรายจ่าย</div>';
+
+  const hist = series.filter(x=>x.has).reverse();
+  $('history').innerHTML = hist.length ? hist.map(x => { const t=totals(db.days[x.s]); return `
+    <div class="li day" data-go="${x.s}"><div><div>${thDate(x.s)}</div><div class="muted">รับ ${baht(t.income)} • จ่าย ${baht(t.expense)}</div></div>
+    <span class="num ${t.profit>=0?'pos':'neg'}">${t.profit>=0?'+':'−'}${baht(Math.abs(t.profit))}</span></div>`; }).join('')
+    : '<div class="empty">ยังไม่มีบันทึกในช่วงนี้</div>';
+}
+
+function drawChart(series){
+  const svg = $('chart'), W=320, H=170, pad=6;
+  const data = series.length > 60 ? series.slice(-60) : series;
+  if (!data.some(x=>x.has)){ svg.innerHTML=''; $('chartNote').textContent='ยังไม่มีข้อมูล'; return; }
+  const max = Math.max(1, ...data.map(x=>Math.abs(x.p)));
+  const hasNeg = data.some(x=>x.p<0), hasPos = data.some(x=>x.p>0);
+  const zero = hasNeg && hasPos ? H/2 : hasNeg ? pad : H-pad;
+  const scale = (hasNeg && hasPos ? H/2-pad : H-2*pad) / max;
+  const bw = W/data.length;
+  const cs = getComputedStyle(document.documentElement);
+  const good = cs.getPropertyValue('--good').trim(), bad = cs.getPropertyValue('--bad').trim(), line = cs.getPropertyValue('--line').trim();
+  let s = `<line x1="0" x2="${W}" y1="${zero}" y2="${zero}" stroke="${line}" stroke-width="1"/>`;
+  data.forEach((x,i) => {
+    if (!x.has || !x.p) return;
+    const h = Math.max(1, Math.abs(x.p)*scale);
+    const y = x.p>=0 ? zero-h : zero;
+    s += `<rect x="${i*bw+bw*0.15}" y="${y}" width="${bw*0.7}" height="${h}" rx="${Math.min(3,bw*0.2)}" fill="${x.p>=0?good:bad}"><title>${thDate(x.s)}: ${baht(x.p)}</title></rect>`;
+  });
+  svg.innerHTML = s;
+  $('chartNote').textContent = `${thDate(data[0].s)} – ${thDate(data[data.length-1].s)} • เขียว=กำไร แดง=ขาดทุน`;
+}
+
+/* ---------- Render: settings ---------- */
+function renderSettings(){
+  $('shopName').value = db.shopName;
+  $('shopTitle').textContent = db.shopName || 'ไก่ทอดหาดใหญ่';
+  document.title = 'บัญชี' + (db.shopName || 'ไก่ทอดหาดใหญ่');
+  $('prodList').innerHTML = db.products.map(p => `
+    <div class="li"><input class="f" value="${esc(p.name)}" data-pname="${p.id}" style="flex:1">
+    <input class="f" type="number" inputmode="decimal" value="${p.price}" data-pprice="${p.id}" style="width:90px;flex:none">
+    <button class="del" data-delprod="${p.id}" aria-label="ลบ">✕</button></div>`).join('') || '<div class="empty">ยังไม่มีเมนู</div>';
+  $('catList').innerHTML = db.categories.map((c,i) => `<div class="li"><span>${esc(c)}</span><button class="del" data-delcat="${i}" aria-label="ลบ">✕</button></div>`).join('');
+}
+
+function renderAll(){ renderDay(); renderChips(); renderSettings(); if ($('tab-report').classList.contains('on')) renderReport(); }
+
+/* ---------- Events ---------- */
+document.addEventListener('click', e => {
+  const b = e.target.closest('button,[data-go]'); if (!b) return;
+  const ds = b.dataset;
+  if (ds.inc){ const d=getDay(cur); setQty(ds.inc, (d.items[ds.inc]?.qty||0)+1); if (navigator.vibrate) navigator.vibrate(15); }
+  else if (ds.dec){ const d=getDay(cur); setQty(ds.dec, (d.items[ds.dec]?.qty||0)-1); }
+  else if (ds.cat){ expCat = ds.cat; renderChips(); $('expAmount').focus(); }
+  else if (ds.delexp){ if(!confirm('ลบรายจ่ายนี้?')) return; const d=getDay(cur); d.expenses=d.expenses.filter(x=>x.id!==ds.delexp); cleanDay(cur); save(); renderDay(); }
+  else if (ds.delprod){ if(!confirm('ลบเมนูนี้? (ข้อมูลที่บันทึกไว้แล้วยังอยู่)')) return; db.products=db.products.filter(p=>p.id!==ds.delprod); save(); renderAll(); }
+  else if (ds.delcat){ db.categories.splice(Number(ds.delcat),1); save(); renderAll(); }
+  else if (ds.tab){ document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x===b)); document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on', t.id==='tab-'+ds.tab)); $('dayCard').style.display = ds.tab==='report'||ds.tab==='settings' ? 'none' : ''; if (ds.tab==='report') renderReport(); window.scrollTo(0,0); }
+  else if (ds.r){ range = ds.r; document.querySelectorAll('#rangeSeg button').forEach(x=>x.classList.toggle('on',x===b)); renderReport(); }
+  else if (ds.go){ cur = ds.go; document.querySelector('nav button[data-tab="sell"]').click(); renderDay(); }
+});
+document.addEventListener('change', e => {
+  const ds = e.target.dataset;
+  if (ds.set) setQty(ds.set, e.target.value);
+  else if (ds.pname){ const p=db.products.find(x=>x.id===ds.pname); p.name=e.target.value.trim()||p.name; save(); renderAll(); }
+  else if (ds.pprice){ const p=db.products.find(x=>x.id===ds.pprice); p.price=Math.max(0,Number(e.target.value)||0); save(); renderAll(); toast('เปลี่ยนราคาแล้ว (มีผลกับการขายใหม่)'); }
+});
+$('date').addEventListener('change', e => { if (e.target.value){ cur = e.target.value; renderDay(); } });
+$('prevDay').onclick = () => { cur = shift(cur,-1); renderDay(); };
+$('nextDay').onclick = () => { cur = shift(cur,1); renderDay(); };
+$('dayNote').addEventListener('input', e => { const d=getDay(cur,true); d.note=e.target.value; cleanDay(cur); save(); });
+$('addExp').onclick = () => {
+  const amt = Number($('expAmount').value);
+  if (!(amt>0)) { toast('ใส่จำนวนเงินก่อน'); $('expAmount').focus(); return; }
+  getDay(cur,true).expenses.push({id:uid(), cat:expCat, amount:amt, note:$('expNote').value.trim()});
+  $('expAmount').value=''; $('expNote').value='';
+  save(); renderDay(); toast('บันทึก ' + expCat + ' ' + baht(amt));
+};
+$('expAmount').addEventListener('keydown', e => { if (e.key==='Enter') $('addExp').click(); });
+$('shopName').addEventListener('change', e => { db.shopName = e.target.value.trim() || 'ไก่ทอดหาดใหญ่'; save(); renderSettings(); });
+$('addProd').onclick = () => {
+  const n=$('newName').value.trim(), pr=Number($('newPrice').value);
+  if (!n || !(pr>=0) || $('newPrice').value==='') { toast('ใส่ชื่อเมนูและราคา'); return; }
+  db.products.push({id:'p'+uid(), name:n, price:pr}); $('newName').value=''; $('newPrice').value='';
+  save(); renderAll(); toast('เพิ่ม ' + n);
+};
+$('addCat').onclick = () => {
+  const n=$('newCat').value.trim(); if(!n || db.categories.includes(n)) return;
+  db.categories.push(n); $('newCat').value=''; save(); renderAll();
+};
+
+function download(name, text, type){
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([text],{type})); a.download=name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+}
+$('exportJson').onclick = () => download(`hatyai-chicken-backup-${today()}.json`, JSON.stringify(db,null,1), 'application/json');
+$('exportCsv').onclick = () => {
+  const q = s => '"' + String(s).replace(/"/g,'""') + '"';
+  const rows = [['วันที่','ประเภท','รายการ','จำนวน','ราคา/หน่วย','จำนวนเงิน','หมายเหตุ']];
+  for (const s of Object.keys(db.days).sort()){
+    const d=db.days[s];
+    for (const i of Object.values(d.items)) rows.push([s,'รายรับ',i.name,i.qty,i.price,i.qty*i.price,'']);
+    for (const e of d.expenses) rows.push([s,'รายจ่าย',e.cat,'','',-e.amount,e.note||'']);
+    const t=totals(d); rows.push([s,'สรุปวัน',t.profit>=0?'กำไร':'ขาดทุน','','',t.profit,d.note||'']);
+  }
+  download(`hatyai-chicken-${today()}.csv`, '﻿' + rows.map(r=>r.map(q).join(',')).join('\n'), 'text/csv');
+};
+$('importBtn').onclick = () => $('importFile').click();
+$('importFile').onchange = async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try{
+    const d = JSON.parse(await f.text());
+    if (!d.products || !d.days) throw 0;
+    if (!confirm('กู้คืนจะแทนที่ข้อมูลปัจจุบันทั้งหมด ดำเนินการต่อ?')) return;
+    db = Object.assign(structuredClone(DEFAULT), d); save(); renderAll(); toast('กู้คืนข้อมูลแล้ว');
+  }catch(err){ toast('ไฟล์ไม่ถูกต้อง'); }
+  e.target.value='';
+};
+
+renderAll();
+</script>
+</body>
+</html>
