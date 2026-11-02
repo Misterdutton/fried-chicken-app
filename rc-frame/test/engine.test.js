@@ -94,3 +94,17 @@ function base() {
   assert.throws(() => { inp.stories.push({ ...inp.stories[0] }); RC.analyze(inp); }); pass++;
 }
 console.log(`OK — ${pass} checks passed`);
+
+// 7) Seismic design category & vertical seismic in combos
+{
+  assert.strictEqual(RC.designCategory(0.30, 0.15, 1.0), 2); // ค
+  assert.strictEqual(RC.designCategory(0.40, 0.30, 1.0), 3); // ง
+  assert.strictEqual(RC.designCategory(0.10, 0.05, 1.0), 0); // ก
+  assert.strictEqual(RC.designCategory(0.20, 0.10, 1.5), 2); // IV bumps ข -> ค
+  const inp = RC.defaultInput(); inp.SDS = 0.4; inp.SD1 = 0.3; inp.system = 'IMF';
+  const r = RC.analyze(inp);
+  assert(!r.eq.systemOk && r.eq.minSystem === 'SMF');
+  near(r.combos[2].name === '1.28D+1.0L+1.0E' ? 1 : 0, 1, 0, 'Ev factor in combo name');
+  pass += 5;
+  console.log('OK — SDC/Ev checks passed');
+}

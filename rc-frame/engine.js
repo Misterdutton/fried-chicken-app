@@ -24,14 +24,30 @@
     SMF: { R: 8, Cd: 5.5, label: 'โครงต้านแรงดัดความเหนียวพิเศษ (SMF)' },
   };
 
-  const COMBOS = [
-    { name: '1.4D', D: 1.4, L: 0, E: 0 },
-    { name: '1.2D+1.6L', D: 1.2, L: 1.6, E: 0 },
-    { name: '1.2D+1.0L+1.0E', D: 1.2, L: 1.0, E: 1.0 },
-    { name: '1.2D+1.0L-1.0E', D: 1.2, L: 1.0, E: -1.0 },
-    { name: '0.9D+1.0E', D: 0.9, L: 0, E: 1.0 },
-    { name: '0.9D-1.0E', D: 0.9, L: 0, E: -1.0 },
-  ];
+  // Strength combos (ACI 318-19 / EIT) with vertical seismic Ev = 0.2·SDS·D (DPT 1301/1302-61)
+  function makeCombos(SDS) {
+    const ev = 0.2 * SDS;
+    const r = (v) => Math.round(v * 1000) / 1000;
+    return [
+      { name: '1.4D', D: 1.4, L: 0, E: 0 },
+      { name: '1.2D+1.6L', D: 1.2, L: 1.6, E: 0 },
+      { name: `${r(1.2 + ev)}D+1.0L+1.0E`, D: 1.2 + ev, L: 1.0, E: 1.0 },
+      { name: `${r(1.2 + ev)}D+1.0L-1.0E`, D: 1.2 + ev, L: 1.0, E: -1.0 },
+      { name: `${r(0.9 - ev)}D+1.0E`, D: 0.9 - ev, L: 0, E: 1.0 },
+      { name: `${r(0.9 - ev)}D-1.0E`, D: 0.9 - ev, L: 0, E: -1.0 },
+    ];
+  }
+  const COMBOS = makeCombos(0);
+
+  // Seismic design category (ก ข ค ง = A B C D) from SDS, SD1 and risk category
+  function designCategory(SDS, SD1, Ie) {
+    const IV = Ie >= 1.5;
+    const bySDS = SDS < 0.167 ? 0 : SDS < 0.33 ? (IV ? 2 : 1) : SDS < 0.5 ? (IV ? 3 : 2) : 3;
+    const bySD1 = SD1 < 0.067 ? 0 : SD1 < 0.133 ? (IV ? 2 : 1) : SD1 < 0.20 ? (IV ? 3 : 2) : 3;
+    return Math.max(bySDS, bySD1);
+  }
+  const SDC_NAME = ['ก', 'ข', 'ค', 'ง'];
+  const SYSTEM_MAX_SDC = { OMF: 1, IMF: 2, SMF: 3 }; // highest category each system is permitted in
 
   const barArea = (db) => Math.PI * db * db / 4; // mm2
 
@@ -196,7 +212,12 @@
     for (let j = 1; j <= ns; j++) sum += W[j] * ys[j] ** k;
     const F = new Array(ns + 1).fill(0);
     for (let j = 1; j <= ns; j++) F[j] = V * W[j] * ys[j] ** k / sum;
-    return { R, Cd, Ie, H, Ta, T, Ts, Sa, Cs, CsMin, V, k, W, WD, WL, Wtot, F, system: sys.label, nx };
+    const sdc = designCategory(SDS, SD1, Ie);
+    const sysKey = SYSTEMS[inp.system] ? inp.system : 'IMF';
+    const systemOk = sdc <= SYSTEM_MAX_SDC[sysKey];
+    const need = sdc <= 1 ? 'OMF' : sdc === 2 ? 'IMF' : 'SMF';
+    return { R, Cd, Ie, H, Ta, T, Ts, Sa, Cs, CsMin, V, k, W, WD, WL, Wtot, F, system: sys.label, nx,
+      sdc, sdcName: SDC_NAME[sdc], systemOk, minSystem: need };
   }
 
   // ---------------------------------------------------------------- analysis
@@ -284,7 +305,7 @@
       });
       return { name: cf.name, U, F, w, R };
     }
-    const combos = COMBOS.map(combine);
+    const combos = makeCombos(inp.SDS).map(combine);
     const service = combine({ name: 'D+L', D: 1, L: 1 });
 
     const stories = storyChecks(model, eq, cases.E);
@@ -524,13 +545,13 @@
       spans: [5, 5, 5], stories: st,
       fc: 24, fy: 400, fyt: 240, cover: 40, stirrupDb: 9, gammaC: 24,
       trib: 4.0, floorDL: 3.9, floorLL: 2.0, roofDL: 3.5, roofLL: 1.0, wall: 5.0, parapet: 0,
-      system: 'IMF', SDS: 0.40, SD1: 0.30, Ie: 1.0, liveFrac: 0,
+      system: 'IMF', SDS: 0.30, SD1: 0.15, Ie: 1.0, liveFrac: 0,
       crackBeam: 0.35, crackCol: 0.70,
     };
   }
 
   return {
     analyze, buildModel, memberDiagram, envelope, interaction, beamFlexure, shearDesign,
-    defaultInput, SYSTEMS, COMBOS, MAX_STORIES, MAX_BAYS, beta1, barArea,
+    defaultInput, SYSTEMS, COMBOS, makeCombos, designCategory, MAX_STORIES, MAX_BAYS, beta1, barArea,
   };
 });

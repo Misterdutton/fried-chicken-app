@@ -182,12 +182,12 @@ details summary { cursor: pointer; font-weight: 600; }
               <option value="SMF">SMF — ความเหนียวพิเศษ (R=8, Cd=5.5)</option>
             </select>
           </label>
-          <label class="f">S<sub>DS</sub> (g)<input id="SDS" type="number" step="0.01" value="0.40"></label>
-          <label class="f">S<sub>D1</sub> (g)<input id="SD1" type="number" step="0.01" value="0.30"></label>
+          <label class="f">S<sub>DS</sub> (g)<input id="SDS" type="number" step="0.01" value="0.30"></label>
+          <label class="f">S<sub>D1</sub> (g)<input id="SD1" type="number" step="0.01" value="0.15"></label>
           <label class="f">I<sub>e</sub><input id="Ie" type="number" step="0.25" value="1"></label>
           <label class="f">สัดส่วน LL ในน้ำหนักอาคาร<input id="liveFrac" type="number" step="0.05" value="0"></label>
         </div>
-        <p class="hint">ค่า S<sub>DS</sub>, S<sub>D1</sub> อ่านจากตาราง/แผนที่ตาม มยผ.1301/1302-61 ตามตำแหน่งที่ตั้งและประเภทชั้นดิน · ใส่ 0.25 สำหรับโกดังเก็บของ</p>
+        <p class="hint">ค่า S<sub>DS</sub>, S<sub>D1</sub> อ่านจากตาราง/แผนที่ตาม มยผ.1301/1302-61 ตามตำแหน่งที่ตั้งและประเภทชั้นดิน (ไม่ใช้กับแอ่งกรุงเทพฯ) · I<sub>e</sub> = 1.0 อาคารทั่วไป, 1.25 อาคารสาธารณะ/โรงเรียน, 1.5 โรงพยาบาล · ใส่ 0.25 สำหรับโกดังเก็บของ</p>
       </fieldset>
 
       <div class="actions">
@@ -290,18 +290,19 @@ details summary { cursor: pointer; font-weight: 600; }
   function summaryHTML(r) {
     const nb = r.design.beams.filter((b) => !b.ok).length, nc = r.design.cols.filter((c) => !c.ok).length;
     const nd = r.stories.filter((s) => !s.okDrift || !s.okTheta).length;
-    const fails = nb + nc + nd;
+    const fails = nb + nc + nd + (r.eq.systemOk ? 0 : 1);
     const maxDrift = Math.max(...r.stories.map((s) => s.ratio));
     const e = r.eq;
     const msg = fails === 0
-      ? 'ผ่านทุกรายการตรวจสอบ: กำลังคาน กำลังเสา และการเคลื่อนตัวระหว่างชั้น'
-      : `ไม่ผ่าน ${fails} รายการ — คาน ${nb} · เสา ${nc} · การเคลื่อนตัว ${nd} ชั้น (ดูแถวสีแดงในตาราง)`;
+      ? 'ผ่านรายการที่โปรแกรมตรวจ: กำลังคาน กำลังเสา การเคลื่อนตัวระหว่างชั้น และระบบโครงสร้างที่อนุญาต'
+      : `ไม่ผ่าน ${fails} รายการ — คาน ${nb} · เสา ${nc} · การเคลื่อนตัว ${nd} ชั้น${r.eq.systemOk ? '' : ' · ระบบโครงสร้าง'} (ดูแถวสีแดงในตาราง)`;
+    const sysMsg = r.eq.systemOk ? '' : `<div class="status bad"><span class="dot"></span><span>ประเภทการออกแบบต้านทานแผ่นดินไหว “${e.sdcName}” ไม่อนุญาตให้ใช้ระบบที่เลือก ต้องใช้อย่างน้อย ${e.minSystem} (มยผ.1301/1302-61)</span></div>`;
     return `
-      <div class="status ${fails ? 'bad' : 'ok'}"><span class="dot"></span><span>${msg}</span></div>
+      <div class="status ${fails ? 'bad' : 'ok'}"><span class="dot"></span><span>${msg}</span></div>${sysMsg}
       <div class="kpis">
         <div class="kpi"><span>น้ำหนักอาคาร W</span><b>${fmt(e.Wtot, 0)}</b><small>kN</small></div>
         <div class="kpi"><span>คาบ T<sub>a</sub> = 0.02H</span><b>${fmt(e.Ta, 3)}</b><small>s · Rayleigh ${fmt(e.Tray, 2)} s</small></div>
-        <div class="kpi"><span>สัมประสิทธิ์ C<sub>s</sub></span><b>${fmt(e.Cs, 4)}</b><small>S<sub>a</sub> ${fmt(e.Sa, 3)} g · R ${e.R}</small></div>
+        <div class="kpi"><span>สัมประสิทธิ์ C<sub>s</sub></span><b>${fmt(e.Cs, 4)}</b><small>S<sub>a</sub> ${fmt(e.Sa, 3)} g · R ${e.R} · ประเภท ${e.sdcName}</small></div>
         <div class="kpi"><span>แรงเฉือนที่ฐาน V</span><b>${fmt(e.V, 1)}</b><small>kN · k = ${fmt(e.k, 2)}</small></div>
         <div class="kpi"><span>Drift สูงสุด Δ/h</span><b>${fmt(maxDrift * 100, 2)}%</b><small>ยอมให้ ${fmt(r.stories[0].limit * 100, 1)}%</small></div>
       </div>`;
@@ -468,6 +469,7 @@ details summary { cursor: pointer; font-weight: 600; }
   }
 
   // ---------------------------------------------------------- tables
+  const tie = (r) => (r.model.inp.fyt > 300 ? 'DB' : 'RB') + r.model.inp.stirrupDb;
   const pill = (ok, warn) => ok ? (warn ? '<span class="pill warn">ใกล้เกิน</span>' : '<span class="pill ok">ผ่าน</span>') : '<span class="pill bad">ไม่ผ่าน</span>';
 
   function storyHTML(r) {
@@ -495,7 +497,7 @@ details summary { cursor: pointer; font-weight: 600; }
         <td class="t">${e.name}</td><td>${fmt(e.b * 1000, 0)}×${fmt(e.h * 1000, 0)}</td><td>${fmt(e.L, 2)}</td>
         <td>${fmt(-b.topL.Mu, 1)}</td><td>${fmt(b.bot.Mu, 1)}</td><td>${fmt(-b.topR.Mu, 1)}</td>
         <td>${bars(b.topL)}</td><td>${bars(b.bot)}</td><td>${bars(b.topR)}</td>
-        <td>${fmt(b.shear.Vu, 1)}</td><td>${fmt(b.shear.phiVc, 1)}</td><td>${b.shear.ok ? `RB${r.model.inp.stirrupDb}@${b.shear.s}` : esc(b.shear.msg)}</td>
+        <td>${fmt(b.shear.Vu, 1)}</td><td>${fmt(b.shear.phiVc, 1)}</td><td>${b.shear.ok ? `${tie(r)}@${b.shear.s}` : esc(b.shear.msg)}</td>
         <td>${pill(b.ok, warn)}${b.fit ? '' : ' <span class="pill warn">2 ชั้น</span>'}</td></tr>`;
     }).join('');
     return `<section class="panel">
@@ -515,7 +517,7 @@ details summary { cursor: pointer; font-weight: 600; }
         <td class="t">${e.name}</td><td>${fmt(e.b * 1000, 0)}×${fmt(e.h * 1000, 0)}</td><td>${c.n}-DB${c.db}</td>
         <td class="${c.rhoOk ? '' : 'bad'}">${fmt(c.ir.rho * 100, 2)}%</td>
         <td>${fmt(w.Pu, 1)}</td><td>${fmt(w.Mu, 1)}</td><td>${fmt(w.cap, 1)}</td><td>${fmt(c.ir.phiPnMax, 0)}</td><td>${fmt(w.ratio, 2)}</td>
-        <td class="t">${esc(w.combo)}</td><td>${fmt(c.shear.Vu, 1)}</td><td>${c.shear.ok ? `RB${r.model.inp.stirrupDb}@${c.sTie}` : esc(c.shear.msg)}</td>
+        <td class="t">${esc(w.combo)}</td><td>${fmt(c.shear.Vu, 1)}</td><td>${c.shear.ok ? `${tie(r)}@${c.sTie}` : esc(c.shear.msg)}</td>
         <td>${pill(c.ok, c.ok && w.ratio > 0.85)}${c.rhoOk ? '' : ' <span class="pill bad">ρ<sub>g</sub></span>'}</td></tr>`;
     }).join('');
     return `<section class="panel">
@@ -536,8 +538,12 @@ details summary { cursor: pointer; font-weight: 600; }
           <li>โครงข้อแข็ง 2 มิติ ฐานยึดแน่น วิเคราะห์เชิงเส้นด้วยวิธี Direct Stiffness (3 DOF ต่อจุดต่อ)</li>
           <li>สติฟเนสหน้าตัดร้าว: คาน 0.35I<sub>g</sub>, เสา 0.70I<sub>g</sub> · E<sub>c</sub> = 4700√f'c MPa</li>
           <li>แรงแผ่นดินไหวแบบสถิตเทียบเท่า: T<sub>a</sub> = 0.02H, C<sub>s</sub> = S<sub>a</sub>I<sub>e</sub>/R ≥ 0.044S<sub>DS</sub>I<sub>e</sub> ≥ 0.01, กระจายตามความสูงด้วย h<sup>k</sup></li>
-          <li>Load combination: 1.4D · 1.2D+1.6L · 1.2D+1.0L±1.0E · 0.9D±1.0E (ยังไม่รวมแรงลม, ผลแนวดิ่ง 0.2S<sub>DS</sub>D, Ω<sub>0</sub> และแรงบิดโดยบังเอิญ)</li>
-          <li>ยังไม่ตรวจ: ความชะลูดของเสา (moment magnification), strong column–weak beam, รายละเอียดเหล็กเสริมตามข้อกำหนดความเหนียวของ IMF/SMF, จุดต่อคาน–เสา และฐานราก</li>
+          <li>Load combination: 1.4D · 1.2D+1.6L · (1.2+0.2S<sub>DS</sub>)D+1.0L±1.0E · (0.9−0.2S<sub>DS</sub>)D±1.0E (รวมแรงแผ่นดินไหวแนวดิ่งแล้ว · ยังไม่รวมแรงลมตาม มยผ.1311-50, Ω<sub>0</sub> และแรงบิดโดยบังเอิญ)</li>
+          <li>ประเภทการออกแบบ ก/ข/ค/ง คำนวณจาก S<sub>DS</sub>, S<sub>D1</sub> และ I<sub>e</sub> · OMF ใช้ได้ถึงประเภท ข, IMF ถึง ค, ประเภท ง ต้องใช้ SMF</li>
+          <li>ยังไม่รองรับสเปกตรัมพิเศษของแอ่งกรุงเทพฯ (กทม. และปริมณฑล) ซึ่ง มยผ.1301/1302-61 กำหนดค่า S<sub>a</sub> ตามโซนและคาบโดยตรง</li>
+          <li>เป็นโครง 2 มิติ ยังไม่ตรวจเสารับโมเมนต์สองทาง และการรวมแรง 100%+30% ในสองทิศทาง</li>
+          <li>ยังไม่ตรวจ: ความชะลูดของเสา (moment magnification), strong column–weak beam (ΣM<sub>nc</sub> ≥ 1.2ΣM<sub>nb</sub>), แรงเฉือนออกแบบจากกำลังดัดที่เป็นไปได้ (capacity design), ระยะโอบรัดและรายละเอียดเหล็กเสริมของ IMF/SMF, จุดต่อคาน–เสา และฐานราก</li>
+          <li>ไม่ได้ลดน้ำหนักจรตามจำนวนชั้นตามกฎกระทรวง (ผลจึงค่อนข้างปลอดภัย)</li>
           <li>ผลลัพธ์ใช้ประกอบการออกแบบเบื้องต้นและการเรียนรู้ งานจริงต้องให้วิศวกรโยธาที่มีใบอนุญาตตรวจสอบและรับรอง</li>
         </ul>
       </details>
