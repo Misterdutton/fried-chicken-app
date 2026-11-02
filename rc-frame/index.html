@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RC Frame 8</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: engineer's calc sheet — input column left, results column right; stacks on phone */
+:root {
+  --bg: #f3f4f2;          /* cured-concrete grey, faint green bias */
+  --panel: #ffffff;
+  --ink: #1c2321;
+  --muted: #5d6763;
+  --line: #d5d9d6;
+  --accent: #1d5c8f;      /* blueprint blue */
+  --accent-ink: #ffffff;
+  --rebar: #b4541f;       /* rust: moment / force diagrams */
+  --rebar-soft: rgba(180, 84, 31, .16);
+  --frame: #2b3431;
+  --ok: #2e7d4f; --ok-bg: #e3f1e8;
+  --warn: #a86a00; --warn-bg: #fbefd6;
+  --bad: #b3261e; --bad-bg: #f9e1df;
+  --font-body: "IBM Plex Sans Thai", "Noto Sans Thai", "Leelawadee UI", system-ui, sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r: 6px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #151a19; --panel: #1e2523; --ink: #e5eae7; --muted: #9aa5a0; --line: #343e3b;
+  --accent: #6aa8dc; --accent-ink: #0d1a24; --rebar: #ee8a52; --rebar-soft: rgba(238, 138, 82, .18); --frame: #cdd5d1;
+  --ok: #6fcf97; --ok-bg: #1d3327; --warn: #f2b84b; --warn-bg: #3a2f17; --bad: #ff8a80; --bad-bg: #3d1f1d;
+  color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --bg: #151a19; --panel: #1e2523; --ink: #e5eae7; --muted: #9aa5a0; --line: #343e3b;
+  --accent: #6aa8dc; --accent-ink: #0d1a24; --rebar: #ee8a52; --rebar-soft: rgba(238, 138, 82, .18); --frame: #cdd5d1;
+  --ok: #6fcf97; --ok-bg: #1d3327; --warn: #f2b84b; --warn-bg: #3a2f17; --bad: #ff8a80; --bad-bg: #3d1f1d;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body {
+  margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body);
+  font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 48px;
+}
+h1, h2, h3 { text-wrap: balance; margin: 0; line-height: 1.25; }
+h1 { font-size: 1.5rem; font-weight: 700; }
+h2 { font-size: 1.1rem; font-weight: 600; }
+h3 { font-size: .8rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.wrap { max-width: 1320px; margin: 0 auto; display: grid; gap: 20px; }
+header.top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; }
+header.top p { margin: 0; color: var(--muted); font-size: .9rem; }
+.grid { display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+@media (min-width: 980px) { .grid { grid-template-columns: 400px minmax(0, 1fr); } .inputs { position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow: auto; } }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; display: grid; gap: 14px; min-width: 0; }
+.inputs { display: grid; gap: 14px; }
+fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: 10px; min-width: 0; }
+legend { padding: 0; margin-bottom: 8px; }
+.row { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+label.f { display: grid; gap: 3px; font-size: .8rem; color: var(--muted); }
+input, select {
+  font: inherit; font-family: var(--font-data); font-size: .9rem; color: var(--ink); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 4px; padding: 6px 8px; width: 100%; min-width: 0;
+}
+select { font-family: var(--font-body); }
+input:focus-visible, select:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.hint { font-size: .75rem; color: var(--muted); margin: 0; }
+.scroll { overflow-x: auto; min-width: 0; }
+table { border-collapse: collapse; width: 100%; font-size: .82rem; }
+th, td { padding: 5px 7px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+th { font-weight: 600; color: var(--muted); font-size: .74rem; text-align: right; vertical-align: bottom; }
+th:first-child, td:first-child { text-align: left; }
+td { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+td.t { font-family: var(--font-body); }
+table.story input { width: 64px; padding: 4px 5px; font-size: .82rem; }
+table.story td { padding: 3px 4px; }
+.btn {
+  font: inherit; font-weight: 600; border: 0; border-radius: 4px; padding: 9px 14px; cursor: pointer;
+  background: var(--accent); color: var(--accent-ink);
+}
+.btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--line); }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.results { display: grid; gap: 20px; min-width: 0; }
+.status { display: flex; gap: 12px; align-items: center; padding: 12px 14px; border-radius: var(--r); font-weight: 500; }
+.status.ok { background: var(--ok-bg); color: var(--ok); }
+.status.bad { background: var(--bad-bg); color: var(--bad); }
+.status .dot { width: 10px; height: 10px; border-radius: 50%; background: currentColor; flex: none; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.kpi { background: var(--panel); padding: 10px 12px; display: grid; gap: 2px; }
+.kpi span { font-size: .74rem; color: var(--muted); }
+.kpi b { font-family: var(--font-data); font-weight: 500; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+.kpi small { font-size: .72rem; color: var(--muted); font-family: var(--font-data); }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button {
+  font: inherit; font-size: .82rem; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--line);
+  background: transparent; color: var(--ink); cursor: pointer;
+}
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.ctrl { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+.ctrl select { width: auto; }
+svg.frame { width: 100%; height: auto; display: block; background: var(--bg); border-radius: 4px; }
+svg text { font-family: var(--font-data); fill: var(--muted); }
+.pill { display: inline-block; font-family: var(--font-body); font-size: .72rem; font-weight: 600; padding: 1px 8px; border-radius: 999px; }
+.pill.ok { background: var(--ok-bg); color: var(--ok); }
+.pill.warn { background: var(--warn-bg); color: var(--warn); }
+.pill.bad { background: var(--bad-bg); color: var(--bad); }
+tr.fail td { background: var(--bad-bg); }
+.legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: .78rem; color: var(--muted); }
+.legend i { display: inline-block; width: 18px; height: 4px; border-radius: 2px; vertical-align: middle; margin-right: 5px; }
+.notes { margin: 0; padding-left: 1.2em; color: var(--muted); font-size: .85rem; display: grid; gap: 4px; max-width: 75ch; }
+.err { background: var(--bad-bg); color: var(--bad); padding: 10px 12px; border-radius: 4px; }
+details summary { cursor: pointer; font-weight: 600; }
+@media (prefers-reduced-motion: no-preference) { .seg button, .btn { transition: background .15s, color .15s; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>RC Frame 8</h1>
+    <p>วิเคราะห์และออกแบบโครงข้อแข็งคอนกรีตเสริมเหล็ก 2 มิติ อาคารสูงไม่เกิน 8 ชั้น · แรงแผ่นดินไหวแบบสถิตเทียบเท่า มยผ.1301/1302-61 · ออกแบบหน้าตัดตาม ACI 318-19 / วสท.</p>
+  </header>
+
+  <div class="grid">
+    <!-- ===================== INPUTS ===================== -->
+    <form class="panel inputs" id="form" autocomplete="off">
+      <fieldset>
+        <legend><h3>รูปร่างโครงสร้าง</h3></legend>
+        <div class="row">
+          <label class="f">ช่วงคาน (m) คั่นด้วย ,<input id="spans" value="5, 5, 5"></label>
+          <label class="f">จำนวนชั้น
+            <select id="nst"></select>
+          </label>
+        </div>
+        <div class="scroll">
+          <table class="story" id="storyTbl">
+            <thead>
+              <tr><th>ชั้น</th><th>สูง<br>m</th><th>เสา b<br>mm</th><th>เสา h<br>mm</th><th>เหล็กเสา<br>เส้น</th><th>DB<br>mm</th><th>คาน b<br>mm</th><th>คาน h<br>mm</th><th>DB คาน<br>mm</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p class="hint">h ของเสา = ด้านที่อยู่ในระนาบโครงข้อแข็ง · คานของชั้น n คือคานที่ระดับพื้นเหนือชั้น n</p>
+      </fieldset>
+
+      <fieldset>
+        <legend><h3>วัสดุ</h3></legend>
+        <div class="row">
+          <label class="f">f'c (MPa)<input id="fc" type="number" step="1" value="24"></label>
+          <label class="f">fy เหล็กยืน (MPa)<input id="fy" type="number" step="10" value="400"></label>
+          <label class="f">fyt เหล็กปลอก (MPa)<input id="fyt" type="number" step="10" value="240"></label>
+          <label class="f">ระยะหุ้ม (mm)<input id="cover" type="number" step="5" value="40"></label>
+          <label class="f">เหล็กปลอก ⌀ (mm)<input id="stirrupDb" type="number" step="1" value="9"></label>
+        </div>
+        <p class="hint">24 MPa ≈ 240 ksc · SD40 = 400 MPa · SR24 = 240 MPa</p>
+      </fieldset>
+
+      <fieldset>
+        <legend><h3>น้ำหนักบรรทุก</h3></legend>
+        <div class="row">
+          <label class="f">ความกว้างรับน้ำหนัก (m)<input id="trib" type="number" step="0.1" value="4"></label>
+          <label class="f">DL พื้น (kN/m²)<input id="floorDL" type="number" step="0.1" value="3.9"></label>
+          <label class="f">LL พื้น (kN/m²)<input id="floorLL" type="number" step="0.1" value="2"></label>
+          <label class="f">DL หลังคา (kN/m²)<input id="roofDL" type="number" step="0.1" value="3.5"></label>
+          <label class="f">LL หลังคา (kN/m²)<input id="roofLL" type="number" step="0.1" value="1"></label>
+          <label class="f">ผนังบนคาน (kN/m)<input id="wall" type="number" step="0.1" value="5"></label>
+        </div>
+        <p class="hint">DL พื้นรวมน้ำหนักแผ่นพื้นและวัสดุปูผิว · น้ำหนักคานและเสาคิดให้อัตโนมัติ (24 kN/m³)</p>
+      </fieldset>
+
+      <fieldset>
+        <legend><h3>แผ่นดินไหว</h3></legend>
+        <div class="row">
+          <label class="f" style="grid-column: 1 / -1">ระบบโครงสร้าง
+            <select id="system">
+              <option value="OMF">OMF — โครงต้านแรงดัดธรรมดา (R=3, Cd=2.5)</option>
+              <option value="IMF" selected>IMF — ความเหนียวปานกลาง (R=5, Cd=4.5)</option>
+              <option value="SMF">SMF — ความเหนียวพิเศษ (R=8, Cd=5.5)</option>
+            </select>
+          </label>
+          <label class="f">S<sub>DS</sub> (g)<input id="SDS" type="number" step="0.01" value="0.40"></label>
+          <label class="f">S<sub>D1</sub> (g)<input id="SD1" type="number" step="0.01" value="0.30"></label>
+          <label class="f">I<sub>e</sub><input id="Ie" type="number" step="0.25" value="1"></label>
+          <label class="f">สัดส่วน LL ในน้ำหนักอาคาร<input id="liveFrac" type="number" step="0.05" value="0"></label>
+        </div>
+        <p class="hint">ค่า S<sub>DS</sub>, S<sub>D1</sub> อ่านจากตาราง/แผนที่ตาม มยผ.1301/1302-61 ตามตำแหน่งที่ตั้งและประเภทชั้นดิน · ใส่ 0.25 สำหรับโกดังเก็บของ</p>
+      </fieldset>
+
+      <div class="actions">
+        <button class="btn" type="submit">วิเคราะห์</button>
+        <button class="btn ghost" type="button" id="reset">ค่าตัวอย่าง</button>
+      </div>
+    </form>
+
+    <!-- ===================== RESULTS ===================== -->
+    <main class="results" id="results" aria-live="polite"></main>
+  </div>
+</div>
+
+<script src="engine.js"></script>
+<script>
+(function () {
+  'use strict';
+  const RC = window.RCFrame;
+  const $ = (id) => document.getElementById(id);
+  const fmt = (v, d = 1) => (v == null || !isFinite(v)) ? '—' : Number(v).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const STORY_FIELDS = ['h', 'colB', 'colH', 'colBarN', 'colBarDb', 'beamB', 'beamH', 'beamBarDb'];
+  let stories = RC.defaultInput().stories;
+  let view = { kind: 'check', combo: 'ENV' };
+  let last = null;
+
+  // ---------------------------------------------------------- story table
+  const nst = $('nst');
+  for (let k = 1; k <= RC.MAX_STORIES; k++) nst.add(new Option(k + ' ชั้น', k));
+  nst.value = stories.length;
+
+  function renderStoryRows() {
+    const tb = $('storyTbl').tBodies[0];
+    tb.innerHTML = '';
+    // show top storey first, like a building section
+    for (let k = stories.length - 1; k >= 0; k--) {
+      const s = stories[k];
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td class="t">${k + 1}</td>` + STORY_FIELDS.map((f) =>
+        `<td><input id="s${k}_${f}" type="number" step="${f === 'h' ? 0.1 : 1}" value="${s[f]}" data-k="${k}" data-f="${f}" aria-label="ชั้น ${k + 1} ${f}"></td>`).join('');
+      tb.appendChild(tr);
+    }
+  }
+  $('storyTbl').addEventListener('input', (ev) => {
+    const t = ev.target; if (!t.dataset.f) return;
+    stories[+t.dataset.k][t.dataset.f] = parseFloat(t.value);
+    schedule();
+  });
+  nst.addEventListener('change', () => {
+    const n = +nst.value;
+    while (stories.length < n) stories.push({ ...stories[stories.length - 1], h: stories.length ? stories[stories.length - 1].h : 3.5 });
+    stories.length = n;
+    renderStoryRows(); schedule();
+  });
+
+  function readInput() {
+    const num = (id) => parseFloat($(id).value);
+    const spans = $('spans').value.split(/[,\s]+/).filter(Boolean).map(Number);
+    return {
+      spans, stories: stories.map((s) => ({ ...s })),
+      fc: num('fc'), fy: num('fy'), fyt: num('fyt'), cover: num('cover'), stirrupDb: num('stirrupDb'), gammaC: 24,
+      trib: num('trib'), floorDL: num('floorDL'), floorLL: num('floorLL'), roofDL: num('roofDL'), roofLL: num('roofLL'),
+      wall: num('wall'), parapet: 0,
+      system: $('system').value, SDS: num('SDS'), SD1: num('SD1'), Ie: num('Ie'), liveFrac: num('liveFrac'),
+    };
+  }
+
+  let timer = null;
+  function schedule() { clearTimeout(timer); timer = setTimeout(run, 350); }
+  $('form').addEventListener('input', (ev) => { if (!ev.target.dataset.f) schedule(); });
+  $('form').addEventListener('submit', (ev) => { ev.preventDefault(); run(); });
+  $('reset').addEventListener('click', () => {
+    const d = RC.defaultInput();
+    stories = d.stories; nst.value = stories.length; renderStoryRows();
+    $('spans').value = d.spans.join(', ');
+    ['fc', 'fy', 'fyt', 'cover', 'stirrupDb', 'trib', 'floorDL', 'floorLL', 'roofDL', 'roofLL', 'wall', 'system', 'SDS', 'SD1', 'Ie', 'liveFrac']
+      .forEach((k) => { $(k).value = d[k]; });
+    run();
+  });
+
+  // ---------------------------------------------------------- run
+  function run() {
+    const out = $('results');
+    let res;
+    try {
+      const inp = readInput();
+      if ([inp.fc, inp.fy, inp.fyt, inp.SDS, inp.SD1, inp.Ie].some((v) => !(v > 0))) throw new Error('ค่าวัสดุและค่าแผ่นดินไหวต้องมากกว่า 0');
+      res = RC.analyze(inp);
+    } catch (e) {
+      out.innerHTML = `<div class="err">${esc(e.message)}</div>`;
+      return;
+    }
+    last = res;
+    out.innerHTML = summaryHTML(res) + diagramPanelHTML(res) + storyHTML(res) + beamHTML(res) + colHTML(res) + notesHTML();
+    wireDiagram();
+    drawDiagram();
+  }
+
+  // ---------------------------------------------------------- summary
+  function summaryHTML(r) {
+    const nb = r.design.beams.filter((b) => !b.ok).length, nc = r.design.cols.filter((c) => !c.ok).length;
+    const nd = r.stories.filter((s) => !s.okDrift || !s.okTheta).length;
+    const fails = nb + nc + nd;
+    const maxDrift = Math.max(...r.stories.map((s) => s.ratio));
+    const e = r.eq;
+    const msg = fails === 0
+      ? 'ผ่านทุกรายการตรวจสอบ: กำลังคาน กำลังเสา และการเคลื่อนตัวระหว่างชั้น'
+      : `ไม่ผ่าน ${fails} รายการ — คาน ${nb} · เสา ${nc} · การเคลื่อนตัว ${nd} ชั้น (ดูแถวสีแดงในตาราง)`;
+    return `
+      <div class="status ${fails ? 'bad' : 'ok'}"><span class="dot"></span><span>${msg}</span></div>
+      <div class="kpis">
+        <div class="kpi"><span>น้ำหนักอาคาร W</span><b>${fmt(e.Wtot, 0)}</b><small>kN</small></div>
+        <div class="kpi"><span>คาบ T<sub>a</sub> = 0.02H</span><b>${fmt(e.Ta, 3)}</b><small>s · Rayleigh ${fmt(e.Tray, 2)} s</small></div>
+        <div class="kpi"><span>สัมประสิทธิ์ C<sub>s</sub></span><b>${fmt(e.Cs, 4)}</b><small>S<sub>a</sub> ${fmt(e.Sa, 3)} g · R ${e.R}</small></div>
+        <div class="kpi"><span>แรงเฉือนที่ฐาน V</span><b>${fmt(e.V, 1)}</b><small>kN · k = ${fmt(e.k, 2)}</small></div>
+        <div class="kpi"><span>Drift สูงสุด Δ/h</span><b>${fmt(maxDrift * 100, 2)}%</b><small>ยอมให้ ${fmt(r.stories[0].limit * 100, 1)}%</small></div>
+      </div>`;
+  }
+
+  // ---------------------------------------------------------- diagram
+  const KINDS = [['check', 'ผลตรวจสอบ'], ['def', 'การเสียรูป'], ['M', 'โมเมนต์ดัด'], ['V', 'แรงเฉือน'], ['N', 'แรงตามแกน']];
+  function diagramPanelHTML(r) {
+    const opts = [['ENV', 'Envelope ทุก combo'], ['D', 'D (น้ำหนักคงที่)'], ['L', 'L (น้ำหนักจร)'], ['E', 'E (แผ่นดินไหว, ไม่คูณ)']]
+      .concat(r.combos.map((c) => [c.name, c.name]));
+    return `<section class="panel">
+      <div class="ctrl">
+        <h2>แผนภาพโครงสร้าง</h2>
+        <select id="combo" aria-label="กรณีน้ำหนัก">${opts.map(([v, t]) => `<option value="${esc(v)}" ${v === view.combo ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select>
+      </div>
+      <div class="seg" role="group" aria-label="ชนิดแผนภาพ">${KINDS.map(([k, t]) => `<button type="button" data-kind="${k}" aria-pressed="${k === view.kind}">${t}</button>`).join('')}</div>
+      <div class="scroll"><svg class="frame" id="svg" role="img" aria-label="แผนภาพโครงข้อแข็ง"></svg></div>
+      <div class="legend" id="legend"></div>
+    </section>`;
+  }
+  function wireDiagram() {
+    document.querySelectorAll('.seg button').forEach((b) => b.addEventListener('click', () => {
+      view.kind = b.dataset.kind;
+      document.querySelectorAll('.seg button').forEach((x) => x.setAttribute('aria-pressed', x === b));
+      drawDiagram();
+    }));
+    $('combo').addEventListener('change', (e) => { view.combo = e.target.value; drawDiagram(); });
+  }
+
+  function resultFor(r, key) {
+    if (key === 'D' || key === 'L' || key === 'E') return r.cases[key];
+    return r.combos.find((c) => c.name === key) || null;
+  }
+
+  function drawDiagram() {
+    const r = last; if (!r) return;
+    const svg = $('svg'), m = r.model;
+    const Wm = m.xs[m.xs.length - 1], Hm = m.ys[m.ys.length - 1];
+    const VW = 1000, pad = 70;
+    const sc = Math.min((VW - 2 * 115) / Wm, 620 / Hm);
+    const VH = Hm * sc + 2 * pad;
+    const offX = (VW - Wm * sc) / 2;
+    const X = (x) => offX + x * sc, Y = (y) => VH - pad - y * sc;
+    svg.setAttribute('viewBox', `0 0 ${VW} ${VH}`);
+    const css = getComputedStyle(document.documentElement);
+    const col = (n) => css.getPropertyValue(n).trim();
+    const C = { frame: col('--frame'), line: col('--line'), rebar: col('--rebar'), soft: col('--rebar-soft'), accent: col('--accent'),
+      ok: col('--ok'), warn: col('--warn'), bad: col('--bad'), muted: col('--muted') };
+    let g = '';
+    const node = (id) => m.nodes[id];
+    const memberLine = (e, stroke, w) => {
+      const a = node(e.n1), b = node(e.n2);
+      return `<line x1="${X(a.x)}" y1="${Y(a.y)}" x2="${X(b.x)}" y2="${Y(b.y)}" stroke="${stroke}" stroke-width="${w}" stroke-linecap="round"/>`;
+    };
+    // supports
+    m.nodes.filter((n) => n.fixed).forEach((n) => {
+      g += `<rect x="${X(n.x) - 14}" y="${Y(0)}" width="28" height="7" fill="${C.muted}"/>`;
+    });
+    // level labels
+    m.ys.forEach((y, j) => { if (j) g += `<text x="${X(Wm) + 14}" y="${Y(y) + 4}" font-size="15">${j + 1 > m.ns ? 'หลังคา' : 'ชั้น ' + (j + 1)} +${fmt(y, 1)}</text>`; });
+    let legend = '';
+    const kind = view.kind;
+
+    if (kind === 'check') {
+      m.elems.forEach((e) => {
+        const rt = e.ratio ?? 0;
+        const c = rt > 1 ? C.bad : rt > 0.85 ? C.warn : C.ok;
+        g += memberLine(e, c, 7);
+      });
+      m.elems.forEach((e) => {
+        const a = node(e.n1), b = node(e.n2);
+        const mx = (X(a.x) + X(b.x)) / 2, my = (Y(a.y) + Y(b.y)) / 2;
+        const t = `${e.name} ${fmt(e.ratio, 2)}`;
+        g += e.type === 'beam'
+          ? `<text x="${mx}" y="${my - 10}" font-size="14" text-anchor="middle">${t}</text>`
+          : `<text x="${mx + 9}" y="${my}" font-size="13">${t}</text>`;
+      });
+      legend = `<span><i style="background:${C.ok}"></i>อัตราส่วนใช้งาน ≤ 0.85</span><span><i style="background:${C.warn}"></i>0.85–1.00</span><span><i style="background:${C.bad}"></i>> 1.00 ไม่ผ่าน</span><span>ตัวเลข = แรงที่ต้องการ / กำลังที่รับได้ (envelope)</span>`;
+    } else {
+      m.elems.forEach((e) => { g += memberLine(e, C.line, 3); });
+    }
+
+    if (kind === 'def') {
+      const res = view.combo === 'ENV' ? r.cases.E : resultFor(r, view.combo);
+      let umax = 0;
+      m.nodes.forEach((n) => { umax = Math.max(umax, Math.hypot(res.U[n.id * 3], res.U[n.id * 3 + 1])); });
+      const mag = umax > 0 ? (0.08 * Math.min(Wm, Hm)) / umax : 1;
+      m.elems.forEach((e, k) => {
+        const ug = e.dofs.map((d) => res.U[d]);
+        const c = e.c, s = e.s;
+        const ul = [c * ug[0] + s * ug[1], -s * ug[0] + c * ug[1], ug[2], c * ug[3] + s * ug[4], -s * ug[3] + c * ug[4], ug[5]];
+        const L = e.L, w = res.w[k], EI = e.E * e.I;
+        const a = node(e.n1);
+        let pts = [];
+        for (let i = 0; i <= 16; i++) {
+          const xi = i / 16, x = xi * L;
+          const u = ul[0] * (1 - xi) + ul[3] * xi;
+          let v = ul[1] * (1 - 3 * xi * xi + 2 * xi ** 3) + ul[2] * L * (xi - 2 * xi * xi + xi ** 3)
+            + ul[4] * (3 * xi * xi - 2 * xi ** 3) + ul[5] * L * (-xi * xi + xi ** 3);
+          v -= w * x * x * (L - x) ** 2 / (24 * EI);
+          const gx = a.x + c * (x + u * mag) - s * v * mag, gy = a.y + s * (x + u * mag) + c * v * mag;
+          pts.push(`${X(gx).toFixed(1)},${Y(gy).toFixed(1)}`);
+        }
+        g += `<polyline points="${pts.join(' ')}" fill="none" stroke="${C.accent}" stroke-width="3"/>`;
+      });
+      // roof displacement labels
+      m.nodes.filter((n) => n.j === m.ns && (n.i === 0 || n.i === m.nx - 1)).forEach((n) => {
+        g += `<text x="${X(n.x)}" y="${Y(n.y) - 14}" font-size="14" text-anchor="middle">Δx ${fmt(res.U[n.id * 3] * 1000, 1)} mm</text>`;
+      });
+      legend = `<span><i style="background:${C.accent}"></i>รูปการเสียรูป (ขยาย ${fmt(mag, 0)} เท่า)</span><span>${view.combo === 'ENV' ? 'แสดงกรณี E (envelope ใช้กับแรงภายในเท่านั้น)' : esc(view.combo)} · ค่าการเคลื่อนตัวแบบยืดหยุ่น δ<sub>xe</sub></span>`;
+    }
+
+    if (kind === 'M' || kind === 'V' || kind === 'N') {
+      const q = kind;
+      const series = []; // per element: [{pts}] one or two curves
+      let vmax = 0;
+      m.elems.forEach((e, k) => {
+        let curves;
+        if (view.combo === 'ENV') { const en = RC.envelope(r, k, 20); curves = [en.max, en.min]; }
+        else { const res = resultFor(r, view.combo); curves = [RC.memberDiagram(res.F[k], res.w[k], e.L, 20)]; }
+        curves.forEach((cv) => cv.forEach((p) => { vmax = Math.max(vmax, Math.abs(p[q])); }));
+        series.push(curves);
+      });
+      const minDim = Math.min(...m.xs.slice(1).map((x, i) => x - m.xs[i]), ...m.ys.slice(1).map((y, i) => y - m.ys[i]));
+      const f = vmax > 0 ? 0.38 * minDim / vmax : 0;
+      const sign = q === 'M' ? -1 : 1; // moments drawn on tension side
+      m.elems.forEach((e, k) => {
+        const a = node(e.n1), c = e.c, s = e.s;
+        series[k].forEach((cv, ci) => {
+          const pts = cv.map((p) => {
+            const off = sign * p[q] * f;
+            return [a.x + c * p.x - s * off, a.y + s * p.x + c * off];
+          });
+          const b = node(e.n2);
+          const poly = [[a.x, a.y], ...pts, [b.x, b.y]].map(([x, y]) => `${X(x).toFixed(1)},${Y(y).toFixed(1)}`).join(' ');
+          g += `<polygon points="${poly}" fill="${C.soft}" stroke="${C.rebar}" stroke-width="${ci ? 1.5 : 2}" ${ci ? 'stroke-dasharray="5 4"' : ''}/>`;
+        });
+        // label the largest absolute value of each member
+        let best = null;
+        series[k].forEach((cv) => cv.forEach((p) => { if (!best || Math.abs(p[q]) > Math.abs(best[q])) best = p; }));
+        if (best && Math.abs(best[q]) > 0.02 * vmax) {
+          const off = sign * best[q] * f;
+          const px = a.x + c * best.x - s * off, py = a.y + s * best.x + c * off;
+          const dy = e.type === 'beam' ? (off < 0 ? 16 : -6) : 4;
+          g += `<text x="${X(px) + (e.type === 'col' ? (off < 0 ? -4 : 4) : 0)}" y="${Y(py) + dy}" font-size="12.5" text-anchor="${e.type === 'col' ? (off < 0 ? 'end' : 'start') : 'middle'}" style="fill:${C.rebar}">${fmt(best[q], 1)}</text>`;
+        }
+      });
+      const unit = q === 'M' ? 'kN·m' : 'kN';
+      const what = { M: 'โมเมนต์ดัด (วาดด้านรับแรงดึง, + = ท้องคานรับแรงดึง)', V: 'แรงเฉือน', N: 'แรงตามแกน (+ = แรงดึง, − = แรงอัด)' }[q];
+      legend = `<span><i style="background:${C.rebar}"></i>${what} · ${unit}</span>` +
+        (view.combo === 'ENV' ? `<span>เส้นทึบ = ค่าสูงสุด · เส้นประ = ค่าต่ำสุด จาก ${r.combos.length} combo</span>` : `<span>${esc(view.combo)}</span>`);
+    }
+
+    if (kind !== 'def' && (view.combo === 'E' || kind === 'check')) {
+      // lateral force arrows
+      for (let j = 1; j <= m.ns; j++) {
+        const y = Y(m.ys[j]), x0 = X(0);
+        g += `<line x1="${x0 - 52}" y1="${y}" x2="${x0 - 8}" y2="${y}" stroke="${C.accent}" stroke-width="2.5"/><path d="M${x0 - 8},${y} l-10,-5 v10 z" fill="${C.accent}"/>`;
+        g += `<text x="${x0 - 30}" y="${y - 7}" font-size="12" text-anchor="middle" style="fill:${C.accent}">${fmt(r.eq.F[j], 1)}</text>`;
+      }
+    }
+    svg.innerHTML = g;
+    $('legend').innerHTML = legend + (kind !== 'def' && (view.combo === 'E' || kind === 'check') ? `<span><i style="background:${C.accent}"></i>แรงแผ่นดินไหว F<sub>x</sub> (kN)</span>` : '');
+  }
+
+  // ---------------------------------------------------------- tables
+  const pill = (ok, warn) => ok ? (warn ? '<span class="pill warn">ใกล้เกิน</span>' : '<span class="pill ok">ผ่าน</span>') : '<span class="pill bad">ไม่ผ่าน</span>';
+
+  function storyHTML(r) {
+    const rows = r.stories.slice().reverse().map((s) => `
+      <tr class="${s.okDrift && s.okTheta ? '' : 'fail'}">
+        <td class="t">${s.level}</td><td>${fmt(s.elev, 2)}</td><td>${fmt(s.W, 0)}</td><td>${fmt(s.F, 1)}</td><td>${fmt(s.Vx, 1)}</td>
+        <td>${fmt(s.dxe * 1000, 2)}</td><td>${fmt(s.dx * 1000, 1)}</td><td>${fmt(s.drift * 1000, 1)}</td>
+        <td>${fmt(s.ratio * 100, 3)}%</td><td>${fmt(s.theta, 3)}${s.pdelta ? ' *' : ''}</td><td>${pill(s.okDrift && s.okTheta, s.ratio > 0.85 * s.limit)}</td>
+      </tr>`).join('');
+    return `<section class="panel">
+      <h2>แรงแผ่นดินไหวและการเคลื่อนตัวระหว่างชั้น</h2>
+      <div class="scroll"><table>
+        <thead><tr><th>ชั้น</th><th>ระดับ m</th><th>W<sub>x</sub> kN</th><th>F<sub>x</sub> kN</th><th>V<sub>x</sub> kN</th><th>δ<sub>xe</sub> mm</th><th>δ<sub>x</sub>=C<sub>d</sub>δ<sub>xe</sub>/I<sub>e</sub> mm</th><th>Δ mm</th><th>Δ/h</th><th>θ</th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>
+      <p class="hint">ขีดจำกัด Δ/h = ${fmt(r.stories[0].limit * 100, 1)}% · θ = P<sub>x</sub>ΔI<sub>e</sub>/(V<sub>x</sub>h<sub>sx</sub>C<sub>d</sub>) ต้องไม่เกิน ${fmt(r.stories[0].thetaMax, 3)} · * θ > 0.10 ต้องพิจารณาผล P-Delta</p>
+    </section>`;
+  }
+
+  function beamHTML(r) {
+    const rows = r.design.beams.slice().sort((a, b) => b.elem.story - a.elem.story || a.elem.line - b.elem.line).map((b) => {
+      const e = b.elem, bars = (x) => x.ok ? `${x.nBars}-DB${b.db}` : esc(x.msg);
+      const warn = b.ok && (e.ratio > 0.85 || !b.fit);
+      return `<tr class="${b.ok ? '' : 'fail'}">
+        <td class="t">${e.name}</td><td>${fmt(e.b * 1000, 0)}×${fmt(e.h * 1000, 0)}</td><td>${fmt(e.L, 2)}</td>
+        <td>${fmt(-b.topL.Mu, 1)}</td><td>${fmt(b.bot.Mu, 1)}</td><td>${fmt(-b.topR.Mu, 1)}</td>
+        <td>${bars(b.topL)}</td><td>${bars(b.bot)}</td><td>${bars(b.topR)}</td>
+        <td>${fmt(b.shear.Vu, 1)}</td><td>${fmt(b.shear.phiVc, 1)}</td><td>${b.shear.ok ? `RB${r.model.inp.stirrupDb}@${b.shear.s}` : esc(b.shear.msg)}</td>
+        <td>${pill(b.ok, warn)}${b.fit ? '' : ' <span class="pill warn">2 ชั้น</span>'}</td></tr>`;
+    }).join('');
+    return `<section class="panel">
+      <h2>ออกแบบคาน</h2>
+      <div class="scroll"><table>
+        <thead><tr><th>คาน</th><th>b×h mm</th><th>L m</th><th>M<sub>u</sub> ซ้าย</th><th>M<sub>u</sub> บวก</th><th>M<sub>u</sub> ขวา</th><th>เหล็กบน ซ้าย</th><th>เหล็กล่าง</th><th>เหล็กบน ขวา</th><th>V<sub>u</sub> kN</th><th>φV<sub>c</sub> kN</th><th>เหล็กปลอก</th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>
+      <p class="hint">โมเมนต์หน่วย kN·m จาก envelope ที่ศูนย์กลางจุดต่อ (ค่อนข้างปลอดภัย) · ρ ≥ ρ<sub>min</sub> และควบคุมด้วยแรงดึง (ε<sub>t</sub> ≥ 0.005) · เหล็กปลอก 2 ขา, φ = 0.75 · “2 ชั้น” = ใส่เหล็กชั้นเดียวไม่พอ</p>
+    </section>`;
+  }
+
+  function colHTML(r) {
+    const rows = r.design.cols.slice().sort((a, b) => b.elem.story - a.elem.story || a.elem.line - b.elem.line).map((c) => {
+      const e = c.elem, w = c.worst;
+      return `<tr class="${c.ok ? '' : 'fail'}">
+        <td class="t">${e.name}</td><td>${fmt(e.b * 1000, 0)}×${fmt(e.h * 1000, 0)}</td><td>${c.n}-DB${c.db}</td>
+        <td class="${c.rhoOk ? '' : 'bad'}">${fmt(c.ir.rho * 100, 2)}%</td>
+        <td>${fmt(w.Pu, 1)}</td><td>${fmt(w.Mu, 1)}</td><td>${fmt(w.cap, 1)}</td><td>${fmt(c.ir.phiPnMax, 0)}</td><td>${fmt(w.ratio, 2)}</td>
+        <td class="t">${esc(w.combo)}</td><td>${fmt(c.shear.Vu, 1)}</td><td>${c.shear.ok ? `RB${r.model.inp.stirrupDb}@${c.sTie}` : esc(c.shear.msg)}</td>
+        <td>${pill(c.ok, c.ok && w.ratio > 0.85)}${c.rhoOk ? '' : ' <span class="pill bad">ρ<sub>g</sub></span>'}</td></tr>`;
+    }).join('');
+    return `<section class="panel">
+      <h2>ออกแบบเสา</h2>
+      <div class="scroll"><table>
+        <thead><tr><th>เสา</th><th>b×h mm</th><th>เหล็กยืน</th><th>ρ<sub>g</sub></th><th>P<sub>u</sub> kN</th><th>M<sub>u</sub> kN·m</th><th>φM<sub>n</sub> ที่ P<sub>u</sub></th><th>φP<sub>n,max</sub> kN</th><th>M<sub>u</sub>/φM<sub>n</sub></th><th>combo วิกฤต</th><th>V<sub>u</sub> kN</th><th>เหล็กปลอก</th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>
+      <p class="hint">ตรวจด้วย interaction diagram P–M (เสาปลอกเดี่ยว φ = 0.65–0.90, φP<sub>n,max</sub> = 0.80φP<sub>o</sub>) ที่แรงอัดคงที่ · ρ<sub>g</sub> ต้องอยู่ระหว่าง 1–8% · ระยะปลอก ≤ 16d<sub>b</sub>, 48d<sub>t</sub>, ด้านแคบ</p>
+    </section>`;
+  }
+
+  function notesHTML() {
+    return `<section class="panel">
+      <details>
+        <summary>สมมติฐานและข้อจำกัด</summary>
+        <ul class="notes">
+          <li>โครงข้อแข็ง 2 มิติ ฐานยึดแน่น วิเคราะห์เชิงเส้นด้วยวิธี Direct Stiffness (3 DOF ต่อจุดต่อ)</li>
+          <li>สติฟเนสหน้าตัดร้าว: คาน 0.35I<sub>g</sub>, เสา 0.70I<sub>g</sub> · E<sub>c</sub> = 4700√f'c MPa</li>
+          <li>แรงแผ่นดินไหวแบบสถิตเทียบเท่า: T<sub>a</sub> = 0.02H, C<sub>s</sub> = S<sub>a</sub>I<sub>e</sub>/R ≥ 0.044S<sub>DS</sub>I<sub>e</sub> ≥ 0.01, กระจายตามความสูงด้วย h<sup>k</sup></li>
+          <li>Load combination: 1.4D · 1.2D+1.6L · 1.2D+1.0L±1.0E · 0.9D±1.0E (ยังไม่รวมแรงลม, ผลแนวดิ่ง 0.2S<sub>DS</sub>D, Ω<sub>0</sub> และแรงบิดโดยบังเอิญ)</li>
+          <li>ยังไม่ตรวจ: ความชะลูดของเสา (moment magnification), strong column–weak beam, รายละเอียดเหล็กเสริมตามข้อกำหนดความเหนียวของ IMF/SMF, จุดต่อคาน–เสา และฐานราก</li>
+          <li>ผลลัพธ์ใช้ประกอบการออกแบบเบื้องต้นและการเรียนรู้ งานจริงต้องให้วิศวกรโยธาที่มีใบอนุญาตตรวจสอบและรับรอง</li>
+        </ul>
+      </details>
+    </section>`;
+  }
+
+  renderStoryRows();
+  run();
+})();
+</script>
+</body>
+</html>
