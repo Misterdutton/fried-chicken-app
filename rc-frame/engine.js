@@ -25,9 +25,17 @@
   };
 
   // Strength combos (ACI 318-19 / EIT) with vertical seismic Ev = 0.2·SDS·D (DPT 1301/1302-61)
-  function makeCombos(SDS) {
+  // Wind combos added when wind is on: 1.2D+1.0L±γw·W, 0.9D±γw·W (γw is a user input)
+  function makeCombos(SDS, windFactor = 0) {
     const ev = 0.2 * SDS;
     const r = (v) => Math.round(v * 1000) / 1000;
+    const gw = windFactor;
+    const wind = gw > 0 ? [
+      { name: `1.2D+1.0L+${r(gw)}W`, D: 1.2, L: 1.0, E: 0, W: gw },
+      { name: `1.2D+1.0L-${r(gw)}W`, D: 1.2, L: 1.0, E: 0, W: -gw },
+      { name: `0.9D+${r(gw)}W`, D: 0.9, L: 0, E: 0, W: gw },
+      { name: `0.9D-${r(gw)}W`, D: 0.9, L: 0, E: 0, W: -gw },
+    ] : [];
     return [
       { name: '1.4D', D: 1.4, L: 0, E: 0 },
       { name: '1.2D+1.6L', D: 1.2, L: 1.6, E: 0 },
@@ -35,7 +43,51 @@
       { name: `${r(1.2 + ev)}D+1.0L-1.0E`, D: 1.2 + ev, L: 1.0, E: -1.0 },
       { name: `${r(0.9 - ev)}D+1.0E`, D: 0.9 - ev, L: 0, E: 1.0 },
       { name: `${r(0.9 - ev)}D-1.0E`, D: 0.9 - ev, L: 0, E: -1.0 },
-    ];
+    ].concat(wind);
+  }
+
+  // linear interpolation in a user-supplied spectrum table [[T, Sa], ...]
+  function interpSpectrum(table, T) {
+    const t = table.filter((r) => isFinite(r[0]) && isFinite(r[1])).sort((a, b) => a[0] - b[0]);
+    if (t.length < 2) throw new Error('ตารางสเปกตรัมต้องมีอย่างน้อย 2 แถว (คาบ T, S\u2090)');
+    if (T <= t[0][0]) return t[0][1];
+    for (let i = 0; i < t.length - 1; i++) {
+      if (T <= t[i + 1][0]) return t[i][1] + (t[i + 1][1] - t[i][1]) * (T - t[i][0]) / (t[i + 1][0] - t[i][0]);
+    }
+    return t[t.length - 1][1];
+  }
+
+  // ---------------------------------------------------------------- wind (DPT 1311-50, simplified procedure)
+  // p = Iw·q·Ce·Cg·Cp,  q = ½ρV²,  V = TF·V50 (strength) or V50 (serviceability)
+  function windLoads(model) {
+    const { inp, ns, ys, xs } = model;
+    const w = inp.wind;
+    if (!w || !w.on) return null;
+    ['V50', 'TF', 'IwU', 'IwS', 'factor'].forEach((k) => {
+      if (!(w[k] > 0)) throw new Error('ค่าแรงลมต้องมากกว่า 0 (' + k + ')');
+    });
+    const rho = 1.25; // kg/m3
+    const H = ys[ns], D = xs[xs.length - 1];
+    const ceA = (z) => Math.max(0.9, Math.pow(z / 10, 0.2));
+    const ceB = (z) => Math.max(0.7, 0.7 * Math.pow(z / 12, 0.3));
+    const Ce = w.terrain === 'B' ? ceB : ceA;
+    const Cg = w.Cg ?? 2.0;
+    const CpW = w.CpW ?? 0.8;
+    const hd = H / D;
+    const CpL = w.CpL ?? (hd < 0.25 ? -0.3 : hd >= 1 ? -0.5 : -0.3 - 0.2 * (hd - 0.25) / 0.75);
+    const q = 0.5 * rho * (w.TF * w.V50) ** 2 / 1000; // kPa, strength
+    const CeL = Ce(H / 2);
+    const pL = w.IwU * q * CeL * Cg * Math.abs(CpL);
+    const F = new Array(ns + 1).fill(0), levels = [];
+    for (let j = 1; j <= ns; j++) {
+      const zTop = j === ns ? ys[j] : (ys[j] + ys[j + 1]) / 2;
+      const zBot = (ys[j] + ys[j - 1]) / 2;
+      const pW = w.IwU * q * Ce(ys[j]) * Cg * CpW;
+      F[j] = (pW + pL) * (zTop - zBot) * inp.trib;
+      levels.push({ level: j, z: ys[j], Ce: Ce(ys[j]), pW, pL, F: F[j] });
+    }
+    const svc = (w.IwS / w.IwU) / (w.TF * w.TF); // serviceability / strength pressure ratio
+    return { q, CpW, CpL, Cg, CeL, F, levels, V: F.reduce((a, b) => a + b, 0), svc, H, D, hd, factor: w.factor };
   }
   const COMBOS = makeCombos(0);
 
@@ -202,7 +254,8 @@
     const SDS = inp.SDS, SD1 = inp.SD1;
     const Ts = SD1 / SDS;
     const T = Ta;
-    const Sa = T <= Ts ? SDS : SD1 / T;
+    const table = inp.spectrum === 'table';
+    const Sa = table ? interpSpectrum(inp.saTable || [], T) : (T <= Ts ? SDS : SD1 / T);
     let Cs = Sa * Ie / R;
     const CsMin = Math.max(0.044 * SDS * Ie, 0.01);
     Cs = Math.max(Cs, CsMin);
@@ -217,7 +270,7 @@
     const systemOk = sdc <= SYSTEM_MAX_SDC[sysKey];
     const need = sdc <= 1 ? 'OMF' : sdc === 2 ? 'IMF' : 'SMF';
     return { R, Cd, Ie, H, Ta, T, Ts, Sa, Cs, CsMin, V, k, W, WD, WL, Wtot, F, system: sys.label, nx,
-      sdc, sdcName: SDC_NAME[sdc], systemOk, minSystem: need };
+      sdc, sdcName: SDC_NAME[sdc], systemOk, minSystem: need, spectrum: table ? 'table' : 'map' };
   }
 
   // ---------------------------------------------------------------- analysis
@@ -225,6 +278,7 @@
     const model = buildModel(inp);
     const { nodes, elems, ndof, nx, ns } = model;
     const eq = seismic(model);
+    const wind = windLoads(model);
 
     // dof map
     const map = new Int32Array(ndof).fill(-1);
@@ -262,8 +316,9 @@
         if (e.type === 'beam') w[e.id] = name === 'D' ? e.wD : name === 'L' ? e.wL : 0;
         else if (name === 'D') { P[e.n1 * 3 + 1] -= e.selfW / 2; P[e.n2 * 3 + 1] -= e.selfW / 2; }
       });
-      if (name === 'E') {
-        nodes.forEach((n) => { if (n.j > 0) P[n.id * 3] += eq.F[n.j] / nx; });
+      if (name === 'E' || name === 'W') {
+        const Fl = name === 'E' ? eq.F : wind.F;
+        nodes.forEach((n) => { if (n.j > 0) P[n.id * 3] += Fl[n.j] / nx; });
       }
       // equivalent nodal loads from member loads
       elems.forEach((e) => {
@@ -292,12 +347,13 @@
     }
 
     const cases = { D: runCase('D'), L: runCase('L'), E: runCase('E') };
+    if (wind) cases.W = runCase('W');
 
     function combine(cf) {
       const U = new Float64Array(ndof), R = new Float64Array(ndof);
       const w = new Float64Array(elems.length);
       const F = elems.map(() => [0, 0, 0, 0, 0, 0]);
-      ['D', 'L', 'E'].forEach((k) => {
+      ['D', 'L', 'E', 'W'].forEach((k) => {
         const f = cf[k]; if (!f) return;
         const c = cases[k];
         for (let d = 0; d < ndof; d++) { U[d] += f * c.U[d]; R[d] += f * c.R[d]; }
@@ -305,13 +361,14 @@
       });
       return { name: cf.name, U, F, w, R };
     }
-    const combos = makeCombos(inp.SDS).map(combine);
+    const combos = makeCombos(inp.SDS, wind ? wind.factor : 0).map(combine);
     const service = combine({ name: 'D+L', D: 1, L: 1 });
 
     const stories = storyChecks(model, eq, cases.E);
     const design = designMembers(model, combos);
+    if (wind) windDrift(model, wind, cases.W);
 
-    return { model, eq, cases, combos, service, stories, design };
+    return { model, eq, wind, cases, combos, service, stories, design };
   }
 
   // internal forces along a member (local), x from node 1
@@ -328,6 +385,24 @@
       pts.sort((a, b) => a.x - b.x);
     }
     return pts;
+  }
+
+  // serviceability drift under wind (V50, Iw serviceability): recommended limit h/500
+  function windDrift(model, wind, Wcase) {
+    const { ns, nx, ys, nodes } = model;
+    const d = new Array(ns + 1).fill(0);
+    for (let j = 1; j <= ns; j++) {
+      let s = 0; nodes.forEach((n) => { if (n.j === j) s += Wcase.U[n.id * 3]; });
+      d[j] = s / nx * wind.svc;
+    }
+    let Vx = 0;
+    for (let j = ns; j >= 1; j--) {
+      Vx += wind.F[j];
+      const L = wind.levels[j - 1];
+      L.Vx = Vx; L.dSvc = d[j]; L.drift = d[j] - d[j - 1]; L.ratio = L.drift / (ys[j] - ys[j - 1]);
+      L.ok = L.ratio <= 1 / 500;
+    }
+    wind.topRatio = d[ns] / ys[ns];
   }
 
   // ---------------------------------------------------------------- story drift
@@ -545,13 +620,14 @@
       spans: [5, 5, 5], stories: st,
       fc: 24, fy: 400, fyt: 240, cover: 40, stirrupDb: 9, gammaC: 24,
       trib: 4.0, floorDL: 3.9, floorLL: 2.0, roofDL: 3.5, roofLL: 1.0, wall: 5.0, parapet: 0,
-      system: 'IMF', SDS: 0.30, SD1: 0.15, Ie: 1.0, liveFrac: 0,
+      system: 'IMF', SDS: 0.30, SD1: 0.15, Ie: 1.0, liveFrac: 0, spectrum: 'map', saTable: [],
+      wind: { on: true, V50: 25, TF: 1.0, IwU: 1.0, IwS: 0.75, terrain: 'A', factor: 1.6 },
       crackBeam: 0.35, crackCol: 0.70,
     };
   }
 
   return {
     analyze, buildModel, memberDiagram, envelope, interaction, beamFlexure, shearDesign,
-    defaultInput, SYSTEMS, COMBOS, makeCombos, designCategory, MAX_STORIES, MAX_BAYS, beta1, barArea,
+    defaultInput, SYSTEMS, COMBOS, makeCombos, designCategory, interpSpectrum, windLoads, MAX_STORIES, MAX_BAYS, beta1, barArea,
   };
 });

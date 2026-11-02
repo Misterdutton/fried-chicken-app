@@ -108,3 +108,35 @@ console.log(`OK — ${pass} checks passed`);
   pass += 5;
   console.log('OK — SDC/Ev checks passed');
 }
+
+// 8) Wind (DPT 1311-50 simplified): hand calc of the top-level force
+{
+  const inp = RC.defaultInput();
+  inp.wind = { on: true, V50: 25, TF: 1.2, IwU: 1.0, IwS: 0.75, terrain: 'A', factor: 1.6 };
+  const r = RC.analyze(inp);
+  const q = 0.5 * 1.25 * (1.2 * 25) ** 2 / 1000;
+  const H = 14.5, D = 15, hd = H / D;
+  const CpL = -0.3 - 0.2 * (hd - 0.25) / 0.75;
+  const pW = q * Math.max(0.9, (H / 10) ** 0.2) * 2 * 0.8;
+  const pL = q * Math.max(0.9, (H / 2 / 10) ** 0.2) * 2 * -CpL;
+  near(r.wind.q, q, 1e-9, 'q');
+  near(r.wind.F[4], (pW + pL) * (3.5 / 2) * 4, 1e-9, 'roof wind force');
+  let Rx = 0; r.model.nodes.forEach((n) => { if (n.fixed) Rx += r.cases.W.R[n.id * 3]; });
+  near(-Rx, r.wind.V, 1e-6, 'wind base shear');
+  assert(r.combos.length === 10 && r.combos[6].name === '1.2D+1.0L+1.6W'); pass++;
+  near(r.wind.svc, 0.75 / 1.44, 1e-12, 'serviceability ratio');
+  console.log('  wind V = %s kN, top drift (service) = H/%s', r.wind.V.toFixed(1), (1 / r.wind.topRatio).toFixed(0));
+}
+
+// 9) User spectrum table (Bangkok basin zones 7–10)
+{
+  near(RC.interpSpectrum([[0, 0.2], [1, 0.4]], 0.5), 0.3, 1e-12, 'interp mid');
+  near(RC.interpSpectrum([[0, 0.2], [1, 0.4]], 3), 0.4, 1e-12, 'interp clamp');
+  const inp = RC.defaultInput();
+  inp.spectrum = 'table'; inp.saTable = [[0, 0.1], [0.29, 0.1], [1, 0.3]];
+  const r = RC.analyze(inp);
+  near(r.eq.Sa, 0.1, 1e-9, 'Sa from table');
+  inp.saTable = [];
+  assert.throws(() => RC.analyze(inp)); pass++;
+}
+console.log(`OK — ${pass} checks passed (all)`);

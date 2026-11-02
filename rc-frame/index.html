@@ -63,6 +63,10 @@ fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: 10px; min-width
 legend { padding: 0; margin-bottom: 8px; }
 .row { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
 label.f { display: grid; gap: 3px; font-size: .8rem; color: var(--muted); }
+textarea { font: inherit; font-family: var(--font-data); font-size: .85rem; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 6px 8px; width: 100%; min-height: 96px; resize: vertical; }
+label.chk { display: flex; gap: 8px; align-items: center; font-size: .9rem; }
+label.chk input { width: auto; }
+.warnbox { background: var(--warn-bg); color: var(--warn); padding: 8px 10px; border-radius: 4px; font-size: .8rem; margin: 0; }
 input, select {
   font: inherit; font-family: var(--font-data); font-size: .9rem; color: var(--ink); background: var(--bg);
   border: 1px solid var(--line); border-radius: 4px; padding: 6px 8px; width: 100%; min-width: 0;
@@ -186,8 +190,37 @@ details summary { cursor: pointer; font-weight: 600; }
           <label class="f">S<sub>D1</sub> (g)<input id="SD1" type="number" step="0.01" value="0.15"></label>
           <label class="f">I<sub>e</sub><input id="Ie" type="number" step="0.25" value="1"></label>
           <label class="f">สัดส่วน LL ในน้ำหนักอาคาร<input id="liveFrac" type="number" step="0.05" value="0"></label>
+          <label class="f" style="grid-column: 1 / -1">ที่มาของค่า S<sub>a</sub>
+            <select id="spectrum">
+              <option value="map" selected>จาก S<sub>DS</sub>, S<sub>D1</sub> (ทั่วประเทศ และแอ่งกรุงเทพฯ โซน 1–6)</option>
+              <option value="table">ตารางสเปกตรัม (แอ่งกรุงเทพฯ โซน 7–10)</option>
+            </select>
+          </label>
+        </div>
+        <div id="saBox" hidden>
+          <label class="f">ค่า S<sub>a</sub> สำหรับวิธีแรงสถิตเทียบเท่าของโซนที่ตั้ง (ตารางที่ 1.4-4) — บรรทัดละ “คาบ T (s), S<sub>a</sub> (g)”
+            <textarea id="saTable" placeholder="0.0, …&#10;0.5, …&#10;1.0, …"></textarea>
+          </label>
+          <p class="hint">โปรแกรมประมาณค่าเชิงเส้นที่คาบ T<sub>a</sub> · ยังใช้ S<sub>DS</sub>, S<sub>D1</sub> ด้านบนเพื่อหาประเภทการออกแบบ แรงแนวดิ่ง และ C<sub>s</sub> ขั้นต่ำ</p>
         </div>
         <p class="hint">ค่า S<sub>DS</sub>, S<sub>D1</sub> อ่านจากตาราง/แผนที่ตาม มยผ.1301/1302-61 ตามตำแหน่งที่ตั้งและประเภทชั้นดิน (ไม่ใช้กับแอ่งกรุงเทพฯ) · I<sub>e</sub> = 1.0 อาคารทั่วไป, 1.25 อาคารสาธารณะ/โรงเรียน, 1.5 โรงพยาบาล · ใส่ 0.25 สำหรับโกดังเก็บของ</p>
+      </fieldset>
+
+      <fieldset>
+        <legend><h3>แรงลม (มยผ.1311-50 วิธีอย่างง่าย)</h3></legend>
+        <label class="chk"><input id="windOn" type="checkbox" checked> คิดแรงลม</label>
+        <div class="row" id="windBox">
+          <label class="f">V<sub>50</sub> (m/s)<input id="V50" type="number" step="0.5" value="25"></label>
+          <label class="f">TF ไต้ฝุ่น<input id="TF" type="number" step="0.01" value="1"></label>
+          <label class="f">I<sub>w</sub> กำลัง<input id="IwU" type="number" step="0.05" value="1"></label>
+          <label class="f">I<sub>w</sub> ใช้งาน<input id="IwS" type="number" step="0.05" value="0.75"></label>
+          <label class="f">สภาพภูมิประเทศ
+            <select id="terrain"><option value="A" selected>A โล่ง</option><option value="B">B ชานเมือง/เมือง</option></select>
+          </label>
+          <label class="f">ตัวคูณน้ำหนัก W<input id="windFactor" type="number" step="0.1" value="1.6"></label>
+        </div>
+        <p class="warnbox">ตรวจ V<sub>50</sub>, TF และ I<sub>w</sub> กับตาราง ก-1 และตารางค่าประกอบความสำคัญใน มยผ.1311-50 ก่อนใช้ ค่าเริ่มต้นเป็นตัวอย่างเท่านั้น (ตัวอย่างที่ตรวจพบ: กลุ่ม 3 V<sub>50</sub> 29 m/s TF 1.0 · กลุ่ม 4A V<sub>50</sub> 25 m/s TF 1.2) · ตัวคูณ W ใช้ตาม combo ที่โครงการกำหนด</p>
+        <p class="hint">ลมพัดในระนาบโครง · ใช้ความกว้างรับน้ำหนักเดียวกับด้านบน · C<sub>g</sub> = 2.0, C<sub>p</sub> ต้นลม 0.8, ท้ายลม −0.3 ถึง −0.5 ตาม H/D</p>
       </fieldset>
 
       <div class="actions">
@@ -252,6 +285,9 @@ details summary { cursor: pointer; font-weight: 600; }
       trib: num('trib'), floorDL: num('floorDL'), floorLL: num('floorLL'), roofDL: num('roofDL'), roofLL: num('roofLL'),
       wall: num('wall'), parapet: 0,
       system: $('system').value, SDS: num('SDS'), SD1: num('SD1'), Ie: num('Ie'), liveFrac: num('liveFrac'),
+      spectrum: $('spectrum').value,
+      saTable: $('saTable').value.split(/\n/).map((l) => l.split(/[,\s\t]+/).filter(Boolean).map(Number)).filter((r) => r.length >= 2),
+      wind: { on: $('windOn').checked, V50: num('V50'), TF: num('TF'), IwU: num('IwU'), IwS: num('IwS'), terrain: $('terrain').value, factor: num('windFactor') },
     };
   }
 
@@ -259,13 +295,19 @@ details summary { cursor: pointer; font-weight: 600; }
   function schedule() { clearTimeout(timer); timer = setTimeout(run, 350); }
   $('form').addEventListener('input', (ev) => { if (!ev.target.dataset.f) schedule(); });
   $('form').addEventListener('submit', (ev) => { ev.preventDefault(); run(); });
+  const syncVis = () => { $('saBox').hidden = $('spectrum').value !== 'table'; $('windBox').hidden = !$('windOn').checked; };
+  $('spectrum').addEventListener('change', syncVis);
+  $('windOn').addEventListener('change', syncVis);
   $('reset').addEventListener('click', () => {
     const d = RC.defaultInput();
     stories = d.stories; nst.value = stories.length; renderStoryRows();
     $('spans').value = d.spans.join(', ');
     ['fc', 'fy', 'fyt', 'cover', 'stirrupDb', 'trib', 'floorDL', 'floorLL', 'roofDL', 'roofLL', 'wall', 'system', 'SDS', 'SD1', 'Ie', 'liveFrac']
       .forEach((k) => { $(k).value = d[k]; });
-    run();
+    $('spectrum').value = 'map'; $('windOn').checked = d.wind.on;
+    $('V50').value = d.wind.V50; $('TF').value = d.wind.TF; $('IwU').value = d.wind.IwU; $('IwS').value = d.wind.IwS;
+    $('terrain').value = d.wind.terrain; $('windFactor').value = d.wind.factor;
+    syncVis(); run();
   });
 
   // ---------------------------------------------------------- run
@@ -281,7 +323,8 @@ details summary { cursor: pointer; font-weight: 600; }
       return;
     }
     last = res;
-    out.innerHTML = summaryHTML(res) + diagramPanelHTML(res) + storyHTML(res) + beamHTML(res) + colHTML(res) + notesHTML();
+    if (view.combo !== 'ENV' && !resultFor(res, view.combo)) view.combo = 'ENV';
+    out.innerHTML = summaryHTML(res) + diagramPanelHTML(res) + storyHTML(res) + windHTML(res) + beamHTML(res) + colHTML(res) + notesHTML();
     wireDiagram();
     drawDiagram();
   }
@@ -290,20 +333,22 @@ details summary { cursor: pointer; font-weight: 600; }
   function summaryHTML(r) {
     const nb = r.design.beams.filter((b) => !b.ok).length, nc = r.design.cols.filter((c) => !c.ok).length;
     const nd = r.stories.filter((s) => !s.okDrift || !s.okTheta).length;
-    const fails = nb + nc + nd + (r.eq.systemOk ? 0 : 1);
+    const nw = r.wind ? r.wind.levels.filter((l) => !l.ok).length : 0;
+    const fails = nb + nc + nd + nw + (r.eq.systemOk ? 0 : 1);
     const maxDrift = Math.max(...r.stories.map((s) => s.ratio));
     const e = r.eq;
     const msg = fails === 0
       ? 'ผ่านรายการที่โปรแกรมตรวจ: กำลังคาน กำลังเสา การเคลื่อนตัวระหว่างชั้น และระบบโครงสร้างที่อนุญาต'
-      : `ไม่ผ่าน ${fails} รายการ — คาน ${nb} · เสา ${nc} · การเคลื่อนตัว ${nd} ชั้น${r.eq.systemOk ? '' : ' · ระบบโครงสร้าง'} (ดูแถวสีแดงในตาราง)`;
+      : `ไม่ผ่าน ${fails} รายการ — คาน ${nb} · เสา ${nc} · การเคลื่อนตัว ${nd} ชั้น${nw ? ` · drift จากลม ${nw} ชั้น` : ''}${r.eq.systemOk ? '' : ' · ระบบโครงสร้าง'} (ดูแถวสีแดงในตาราง)`;
     const sysMsg = r.eq.systemOk ? '' : `<div class="status bad"><span class="dot"></span><span>ประเภทการออกแบบต้านทานแผ่นดินไหว “${e.sdcName}” ไม่อนุญาตให้ใช้ระบบที่เลือก ต้องใช้อย่างน้อย ${e.minSystem} (มยผ.1301/1302-61)</span></div>`;
     return `
       <div class="status ${fails ? 'bad' : 'ok'}"><span class="dot"></span><span>${msg}</span></div>${sysMsg}
       <div class="kpis">
         <div class="kpi"><span>น้ำหนักอาคาร W</span><b>${fmt(e.Wtot, 0)}</b><small>kN</small></div>
         <div class="kpi"><span>คาบ T<sub>a</sub> = 0.02H</span><b>${fmt(e.Ta, 3)}</b><small>s · Rayleigh ${fmt(e.Tray, 2)} s</small></div>
-        <div class="kpi"><span>สัมประสิทธิ์ C<sub>s</sub></span><b>${fmt(e.Cs, 4)}</b><small>S<sub>a</sub> ${fmt(e.Sa, 3)} g · R ${e.R} · ประเภท ${e.sdcName}</small></div>
+        <div class="kpi"><span>สัมประสิทธิ์ C<sub>s</sub></span><b>${fmt(e.Cs, 4)}</b><small>S<sub>a</sub> ${fmt(e.Sa, 3)} g${e.spectrum === 'table' ? ' (ตาราง)' : ''} · R ${e.R} · ประเภท ${e.sdcName}</small></div>
         <div class="kpi"><span>แรงเฉือนที่ฐาน V</span><b>${fmt(e.V, 1)}</b><small>kN · k = ${fmt(e.k, 2)}</small></div>
+        <div class="kpi"><span>แรงเฉือนฐานจากลม</span><b>${r.wind ? fmt(r.wind.V, 1) : 'ไม่คิด'}</b><small>${r.wind ? `kN · ×${fmt(r.wind.factor, 1)} = ${fmt(r.wind.V * r.wind.factor, 1)} เทียบ E ${fmt(e.V, 1)}` : 'kN'}</small></div>
         <div class="kpi"><span>Drift สูงสุด Δ/h</span><b>${fmt(maxDrift * 100, 2)}%</b><small>ยอมให้ ${fmt(r.stories[0].limit * 100, 1)}%</small></div>
       </div>`;
   }
@@ -311,7 +356,7 @@ details summary { cursor: pointer; font-weight: 600; }
   // ---------------------------------------------------------- diagram
   const KINDS = [['check', 'ผลตรวจสอบ'], ['def', 'การเสียรูป'], ['M', 'โมเมนต์ดัด'], ['V', 'แรงเฉือน'], ['N', 'แรงตามแกน']];
   function diagramPanelHTML(r) {
-    const opts = [['ENV', 'Envelope ทุก combo'], ['D', 'D (น้ำหนักคงที่)'], ['L', 'L (น้ำหนักจร)'], ['E', 'E (แผ่นดินไหว, ไม่คูณ)']]
+    const opts = [['ENV', 'Envelope ทุก combo'], ['D', 'D (น้ำหนักคงที่)'], ['L', 'L (น้ำหนักจร)'], ['E', 'E (แผ่นดินไหว, ไม่คูณ)']].concat(r.wind ? [['W', 'W (ลม ระดับกำลัง, ไม่คูณ)']] : [])
       .concat(r.combos.map((c) => [c.name, c.name]));
     return `<section class="panel">
       <div class="ctrl">
@@ -333,7 +378,7 @@ details summary { cursor: pointer; font-weight: 600; }
   }
 
   function resultFor(r, key) {
-    if (key === 'D' || key === 'L' || key === 'E') return r.cases[key];
+    if (key === 'D' || key === 'L' || key === 'E' || key === 'W') return r.cases[key] || null;
     return r.combos.find((c) => c.name === key) || null;
   }
 
@@ -456,16 +501,17 @@ details summary { cursor: pointer; font-weight: 600; }
         (view.combo === 'ENV' ? `<span>เส้นทึบ = ค่าสูงสุด · เส้นประ = ค่าต่ำสุด จาก ${r.combos.length} combo</span>` : `<span>${esc(view.combo)}</span>`);
     }
 
-    if (kind !== 'def' && (view.combo === 'E' || kind === 'check')) {
+    const arrowF = view.combo === 'W' && r.wind ? r.wind.F : r.eq.F;
+    if (kind !== 'def' && (view.combo === 'E' || view.combo === 'W' || kind === 'check')) {
       // lateral force arrows
       for (let j = 1; j <= m.ns; j++) {
         const y = Y(m.ys[j]), x0 = X(0);
         g += `<line x1="${x0 - 52}" y1="${y}" x2="${x0 - 8}" y2="${y}" stroke="${C.accent}" stroke-width="2.5"/><path d="M${x0 - 8},${y} l-10,-5 v10 z" fill="${C.accent}"/>`;
-        g += `<text x="${x0 - 30}" y="${y - 7}" font-size="12" text-anchor="middle" style="fill:${C.accent}">${fmt(r.eq.F[j], 1)}</text>`;
+        g += `<text x="${x0 - 30}" y="${y - 7}" font-size="12" text-anchor="middle" style="fill:${C.accent}">${fmt(arrowF[j], 1)}</text>`;
       }
     }
     svg.innerHTML = g;
-    $('legend').innerHTML = legend + (kind !== 'def' && (view.combo === 'E' || kind === 'check') ? `<span><i style="background:${C.accent}"></i>แรงแผ่นดินไหว F<sub>x</sub> (kN)</span>` : '');
+    $('legend').innerHTML = legend + (kind !== 'def' && (view.combo === 'E' || view.combo === 'W' || kind === 'check') ? `<span><i style="background:${C.accent}"></i>${view.combo === 'W' ? 'แรงลม' : 'แรงแผ่นดินไหว'} F<sub>x</sub> (kN)</span>` : '');
   }
 
   // ---------------------------------------------------------- tables
@@ -486,6 +532,22 @@ details summary { cursor: pointer; font-weight: 600; }
         <tbody>${rows}</tbody>
       </table></div>
       <p class="hint">ขีดจำกัด Δ/h = ${fmt(r.stories[0].limit * 100, 1)}% · θ = P<sub>x</sub>ΔI<sub>e</sub>/(V<sub>x</sub>h<sub>sx</sub>C<sub>d</sub>) ต้องไม่เกิน ${fmt(r.stories[0].thetaMax, 3)} · * θ > 0.10 ต้องพิจารณาผล P-Delta</p>
+    </section>`;
+  }
+
+  function windHTML(r) {
+    const w = r.wind; if (!w) return '';
+    const rows = w.levels.slice().reverse().map((l) => `
+      <tr class="${l.ok ? '' : 'fail'}"><td class="t">${l.level}</td><td>${fmt(l.z, 2)}</td><td>${fmt(l.Ce, 3)}</td>
+      <td>${fmt(l.pW, 3)}</td><td>${fmt(l.pL, 3)}</td><td>${fmt(l.F, 1)}</td><td>${fmt(l.Vx, 1)}</td>
+      <td>${fmt(l.drift * 1000, 2)}</td><td>${l.ratio > 0 ? 'h/' + fmt(1 / l.ratio, 0) : '—'}</td><td>${pill(l.ok, l.ratio > 0.85 / 500)}</td></tr>`).join('');
+    return `<section class="panel">
+      <h2>แรงลมและการเคลื่อนตัวขณะใช้งาน</h2>
+      <div class="scroll"><table>
+        <thead><tr><th>ชั้น</th><th>z m</th><th>C<sub>e</sub></th><th>p ต้นลม kPa</th><th>p ท้ายลม kPa</th><th>F kN</th><th>V<sub>x</sub> kN</th><th>Δ ใช้งาน mm</th><th>Δ/h</th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>
+      <p class="hint">q = ½ρ(TF·V<sub>50</sub>)² = ${fmt(w.q, 3)} kPa · C<sub>g</sub> ${w.Cg} · C<sub>p</sub> ${w.CpW} / ${fmt(w.CpL, 3)} (H/D ${fmt(w.hd, 2)}) · ท้ายลมใช้ C<sub>e</sub> ที่ H/2 · การเคลื่อนตัวขณะใช้งานใช้ V<sub>50</sub> และ I<sub>w</sub> ใช้งาน แนะนำไม่เกิน h/500 (ยอดอาคาร H/${fmt(1 / w.topRatio, 0)})</p>
     </section>`;
   }
 
@@ -538,9 +600,10 @@ details summary { cursor: pointer; font-weight: 600; }
           <li>โครงข้อแข็ง 2 มิติ ฐานยึดแน่น วิเคราะห์เชิงเส้นด้วยวิธี Direct Stiffness (3 DOF ต่อจุดต่อ)</li>
           <li>สติฟเนสหน้าตัดร้าว: คาน 0.35I<sub>g</sub>, เสา 0.70I<sub>g</sub> · E<sub>c</sub> = 4700√f'c MPa</li>
           <li>แรงแผ่นดินไหวแบบสถิตเทียบเท่า: T<sub>a</sub> = 0.02H, C<sub>s</sub> = S<sub>a</sub>I<sub>e</sub>/R ≥ 0.044S<sub>DS</sub>I<sub>e</sub> ≥ 0.01, กระจายตามความสูงด้วย h<sup>k</sup></li>
-          <li>Load combination: 1.4D · 1.2D+1.6L · (1.2+0.2S<sub>DS</sub>)D+1.0L±1.0E · (0.9−0.2S<sub>DS</sub>)D±1.0E (รวมแรงแผ่นดินไหวแนวดิ่งแล้ว · ยังไม่รวมแรงลมตาม มยผ.1311-50, Ω<sub>0</sub> และแรงบิดโดยบังเอิญ)</li>
+          <li>Load combination: 1.4D · 1.2D+1.6L · (1.2+0.2S<sub>DS</sub>)D+1.0L±1.0E · (0.9−0.2S<sub>DS</sub>)D±1.0E (รวมแรงแผ่นดินไหวแนวดิ่งแล้ว) · แรงลม 1.2D+1.0L±γ<sub>w</sub>W และ 0.9D±γ<sub>w</sub>W · ยังไม่รวม Ω<sub>0</sub> และแรงบิดโดยบังเอิญ</li>
+          <li>แรงลมใช้วิธีอย่างง่ายของ มยผ.1311-50: p = I<sub>w</sub>qC<sub>e</sub>C<sub>g</sub>C<sub>p</sub> เหมาะกับอาคารรูปทรงปกติที่ไม่ไวต่อการสั่นจากลม ยังไม่คิดลมตั้งฉากกับโครง แรงยกหลังคา และลมบิด</li>
           <li>ประเภทการออกแบบ ก/ข/ค/ง คำนวณจาก S<sub>DS</sub>, S<sub>D1</sub> และ I<sub>e</sub> · OMF ใช้ได้ถึงประเภท ข, IMF ถึง ค, ประเภท ง ต้องใช้ SMF</li>
-          <li>ยังไม่รองรับสเปกตรัมพิเศษของแอ่งกรุงเทพฯ (กทม. และปริมณฑล) ซึ่ง มยผ.1301/1302-61 กำหนดค่า S<sub>a</sub> ตามโซนและคาบโดยตรง</li>
+          <li>แอ่งกรุงเทพฯ โซน 7–10: กรอกค่า S<sub>a</sub> ตามคาบจากตารางที่ 1.4-4 ของ มยผ.1301/1302-61 เอง โปรแกรมไม่ได้ฝังค่าตารางไว้</li>
           <li>เป็นโครง 2 มิติ ยังไม่ตรวจเสารับโมเมนต์สองทาง และการรวมแรง 100%+30% ในสองทิศทาง</li>
           <li>ยังไม่ตรวจ: ความชะลูดของเสา (moment magnification), strong column–weak beam (ΣM<sub>nc</sub> ≥ 1.2ΣM<sub>nb</sub>), แรงเฉือนออกแบบจากกำลังดัดที่เป็นไปได้ (capacity design), ระยะโอบรัดและรายละเอียดเหล็กเสริมของ IMF/SMF, จุดต่อคาน–เสา และฐานราก</li>
           <li>ไม่ได้ลดน้ำหนักจรตามจำนวนชั้นตามกฎกระทรวง (ผลจึงค่อนข้างปลอดภัย)</li>
