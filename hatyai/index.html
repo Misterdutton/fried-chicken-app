@@ -101,6 +101,8 @@ main{max-width:640px;margin:0 auto;padding-block:12px;padding-left:max(16px,env(
 .price-step input.f{width:80px;flex:none;text-align:center;padding:0 6px}
 .prod{display:flex;flex-direction:column;gap:6px;padding:10px 0;border-top:1px solid var(--line)}
 .prod:first-child{border-top:0}
+.mv{width:40px;height:40px;flex:none;border:0;border-radius:10px;background:var(--brand-soft);color:var(--brand);font-size:.9rem;touch-action:manipulation}
+.mv:disabled{opacity:.3}
 .prod .r{display:flex;align-items:center;gap:6px;justify-content:space-between}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
 .chip{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:8px 12px;font:inherit;font-size:.88rem}
@@ -305,16 +307,17 @@ const SKINS = [
 const DEFAULT = {
   shopName: 'ไก่ทอดลุงบี้',
   products: [
-    {id:'p1', name:'ไก่ทอด (น่อง/สะโพก)', price:25},
+    {id:'p1', name:'ไก่ทอด (สะโพก)', price:25},
+    {id:'leg', name:'ไก่ทอด (น่อง)', price:15},
     {id:'p2', name:'ไก่ทอด (ปีก)', price:20},
     {id:'p3', name:'ไก่ทอด (อก)', price:30},
+    {id:'p7', name:'เครื่องในไก่', price:12},
+    {id:'p8', name:'ตีนไก่', price:2},
     {id:'p4', name:'ข้าวเหนียว', price:10},
     {id:'p5', name:'หอมเจียว (ถุง)', price:10},
     {id:'p6', name:'ชุดไก่+ข้าวเหนียว', price:35},
-    {id:'p7', name:'เครื่องในไก่', price:12},
-    {id:'p8', name:'ตีนไก่', price:2},
   ],
-  menuAdds: ['p7','p8','name-lungbee','price-offal-feet'],
+  menuAdds: ['p7','p8','name-lungbee','price-offal-feet','split-p1','leg','order-offal'],
   skin: 'gold', textSize: '', logo: '',
   categories: ['ไก่สด','น้ำมัน','แป้ง/เครื่องปรุง','หอมแดง','ข้าวเหนียว','แก๊ส','ถุง/กล่อง','ค่าเช่าที่','ค่าแรง','อื่นๆ'],
   days: {}
@@ -376,6 +379,17 @@ function addNewMenus(){
     }
     db.menuAdds.push('price-offal-feet'); changed = true;
   }
+  // split "น่อง/สะโพก" into สะโพก (same item, keeps history) and a new น่อง placed right after it
+  if (!db.menuAdds.includes('split-p1')){
+    const p1 = db.products.find(x => x.id === 'p1');
+    if (p1 && p1.name === 'ไก่ทอด (น่อง/สะโพก)') p1.name = 'ไก่ทอด (สะโพก)';
+    if (!db.products.some(x => x.id === 'leg' || x.name === 'ไก่ทอด (น่อง)')){
+      const i = db.products.findIndex(x => x.id === 'p1');
+      db.products.splice(i < 0 ? db.products.length : i + 1, 0, {id:'leg', name:'ไก่ทอด (น่อง)', price:15});
+    }
+    if (!db.menuAdds.includes('leg')) db.menuAdds.push('leg');
+    db.menuAdds.push('split-p1'); changed = true;
+  }
   if (!db.menuAdds.includes('name-lungbee')){
     if (db.shopName === 'ไก่ทอดหาดใหญ่') db.shopName = DEFAULT.shopName;
     db.menuAdds.push('name-lungbee'); changed = true;
@@ -385,6 +399,15 @@ function addNewMenus(){
     if (!def || db.menuAdds.includes(id)) continue;
     if (!db.products.some(p => p.id === id || p.name === def.name)) db.products.push({...def});
     db.menuAdds.push(id); changed = true;
+  }
+  // move เครื่องในไก่ and ตีนไก่ to just above ข้าวเหนียว (once)
+  if (!db.menuAdds.includes('order-offal')){
+    const moving = ['p7','p8'].map(id => db.products.find(x => x.id === id)).filter(Boolean);
+    if (moving.length && db.products.some(x => x.id === 'p4')){
+      db.products = db.products.filter(x => !moving.includes(x));
+      db.products.splice(db.products.findIndex(x => x.id === 'p4'), 0, ...moving);
+    }
+    db.menuAdds.push('order-offal'); changed = true;
   }
   return changed;
 }
@@ -624,9 +647,11 @@ function renderSettings(){
   $('shopName').value = db.shopName;
   $('shopTitle').textContent = db.shopName || DEFAULT.shopName;
   document.title = 'บัญชี' + (db.shopName || DEFAULT.shopName);
-  $('prodList').innerHTML = db.products.map(p => `
+  $('prodList').innerHTML = db.products.map((p,i) => `
     <div class="prod">
       <div class="r"><input class="f" value="${esc(p.name)}" data-pname="${p.id}" aria-label="ชื่อเมนู">
+        <button class="mv" data-move="${p.id}" data-n="-1" aria-label="เลื่อน ${esc(p.name)} ขึ้น" ${i===0?'disabled':''}>▲</button>
+        <button class="mv" data-move="${p.id}" data-n="1" aria-label="เลื่อน ${esc(p.name)} ลง" ${i===db.products.length-1?'disabled':''}>▼</button>
         <button class="del" data-delprod="${p.id}" aria-label="ลบเมนู ${esc(p.name)}">✕</button></div>
       <div class="r"><span class="muted">ราคา (บาท)</span>
         <span class="price-step">
@@ -645,6 +670,9 @@ document.addEventListener('click', async e => {
   const b = e.target.closest('button,[data-go]'); if (!b) return;
   const ds = b.dataset;
   if (ds.add){ const d=getDay(cur), n=Number(ds.n); setQty(ds.add, (d.items[ds.add]?.qty||0)+n); if (n>0 && navigator.vibrate) navigator.vibrate(15); if (n>1) toast(`+${n} ${db.products.find(p=>p.id===ds.add)?.name||''}`); }
+  else if (ds.move){ const i=db.products.findIndex(x=>x.id===ds.move), j=i+Number(ds.n); if(i<0||j<0||j>=db.products.length) return;
+    [db.products[i],db.products[j]]=[db.products[j],db.products[i]]; save('settings'); renderAll();
+    const el=document.querySelector(`[data-move="${ds.move}"][data-n="${ds.n}"]`); if(el && !el.disabled) el.focus(); }
   else if (ds.pstep){ const p=db.products.find(x=>x.id===ds.pstep); if(!p) return; p.price=Math.max(0,p.price+Number(ds.n)); save('settings'); renderAll(); }
   else if (ds.cat){ expCat = ds.cat; renderChips(); $('expAmount').focus(); }
   else if (ds.delexp){ if(!await ask('ลบรายจ่ายนี้?')) return; const d=getDay(cur); d.expenses=d.expenses.filter(x=>x.id!==ds.delexp); cleanDay(cur); save(); renderDay(); }
