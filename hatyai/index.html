@@ -305,7 +305,8 @@ const SKINS = [
 const DEFAULT = {
   shopName: 'ไก่ทอดลุงบี้',
   products: [
-    {id:'p1', name:'ไก่ทอด (น่อง/สะโพก)', price:25},
+    {id:'p1', name:'ไก่ทอด (สะโพก)', price:25},
+    {id:'leg', name:'ไก่ทอด (น่อง)', price:15},
     {id:'p2', name:'ไก่ทอด (ปีก)', price:20},
     {id:'p3', name:'ไก่ทอด (อก)', price:30},
     {id:'p4', name:'ข้าวเหนียว', price:10},
@@ -314,7 +315,7 @@ const DEFAULT = {
     {id:'p7', name:'เครื่องในไก่', price:12},
     {id:'p8', name:'ตีนไก่', price:2},
   ],
-  menuAdds: ['p7','p8','name-lungbee','price-offal-feet'],
+  menuAdds: ['p7','p8','name-lungbee','price-offal-feet','split-p1','leg'],
   skin: 'gold', textSize: '', logo: '',
   categories: ['ไก่สด','น้ำมัน','แป้ง/เครื่องปรุง','หอมแดง','ข้าวเหนียว','แก๊ส','ถุง/กล่อง','ค่าเช่าที่','ค่าแรง','อื่นๆ'],
   days: {}
@@ -375,6 +376,17 @@ function addNewMenus(){
       if (p && p.price === oldP) p.price = def.price;
     }
     db.menuAdds.push('price-offal-feet'); changed = true;
+  }
+  // split "น่อง/สะโพก" into สะโพก (same item, keeps history) and a new น่อง placed right after it
+  if (!db.menuAdds.includes('split-p1')){
+    const p1 = db.products.find(x => x.id === 'p1');
+    if (p1 && p1.name === 'ไก่ทอด (น่อง/สะโพก)') p1.name = 'ไก่ทอด (สะโพก)';
+    if (!db.products.some(x => x.id === 'leg' || x.name === 'ไก่ทอด (น่อง)')){
+      const i = db.products.findIndex(x => x.id === 'p1');
+      db.products.splice(i < 0 ? db.products.length : i + 1, 0, {id:'leg', name:'ไก่ทอด (น่อง)', price:15});
+    }
+    if (!db.menuAdds.includes('leg')) db.menuAdds.push('leg');
+    db.menuAdds.push('split-p1'); changed = true;
   }
   if (!db.menuAdds.includes('name-lungbee')){
     if (db.shopName === 'ไก่ทอดหาดใหญ่') db.shopName = DEFAULT.shopName;
