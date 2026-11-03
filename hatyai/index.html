@@ -50,14 +50,23 @@ main{max-width:640px;margin:0 auto;padding-block:12px;padding-left:max(16px,env(
 .stat.wide{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center}
 .stat.good{background:var(--good-soft)} .stat.good .v{color:var(--good)}
 .stat.bad{background:var(--bad-soft)} .stat.bad .v{color:var(--bad)}
-.item{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.item{display:flex;flex-direction:column;gap:8px;padding:12px 0;border-top:1px solid var(--line)}
+.item .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 .item:first-of-type{border-top:0}
 .item .info{flex:1;min-width:0}
-.item .name{font-weight:500}
-.qty{display:flex;align-items:center;gap:6px}
-.qty button{width:44px;height:44px;border-radius:12px;border:0;font-size:1.4rem;font-weight:600;background:var(--brand-soft);color:var(--brand)}
+.item .name{font-weight:600;font-size:1.05rem}
+.qty{display:grid;grid-template-columns:1fr 1.15fr 1fr 1fr 1fr;gap:6px}
+.qty button{min-width:0;height:58px;border-radius:14px;border:0;font:inherit;font-size:1.6rem;font-weight:700;background:var(--brand-soft);color:var(--brand);touch-action:manipulation}
+.qty button:active{transform:scale(.95)}
 .qty button.plus{background:var(--brand);color:#fff}
-.qty input{width:56px;height:44px;text-align:center;font:inherit;font-size:1.1rem;font-weight:600;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink)}
+.qty button.quick{font-size:1.15rem;background:var(--card);border:2px solid var(--brand);color:var(--brand)}
+.qty input{min-width:0;width:100%;height:58px;text-align:center;font:inherit;font-size:1.35rem;font-weight:700;border:2px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink)}
+.price-step{display:flex;align-items:center;gap:6px;flex:none}
+.price-step button{width:46px;height:46px;border-radius:12px;border:0;background:var(--brand-soft);color:var(--brand);font:inherit;font-weight:700;font-size:.95rem;touch-action:manipulation}
+.price-step input.f{width:80px;flex:none;text-align:center;padding:0 6px}
+.prod{display:flex;flex-direction:column;gap:6px;padding:10px 0;border-top:1px solid var(--line)}
+.prod:first-child{border-top:0}
+.prod .r{display:flex;align-items:center;gap:6px;justify-content:space-between}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
 .chip{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:8px 12px;font:inherit;font-size:.88rem}
 .chip.on{background:var(--brand);color:#fff;border-color:var(--brand)}
@@ -192,6 +201,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
     </div>
     <div class="card">
       <h2>เมนูและราคา</h2>
+      <p class="muted" style="margin:0 0 4px">กด −2 / +2 ปรับราคาทีละ 2 บาท หรือพิมพ์ราคาเองได้ เช่น 12, 22</p>
       <div class="list" id="prodList"></div>
       <div class="row" style="margin-top:10px">
         <input class="f" id="newName" placeholder="ชื่อเมนู">
@@ -403,12 +413,14 @@ function renderDay(){
   for (const [id,i] of Object.entries(d.items)) if (!db.products.find(p=>p.id===id) && i.qty>0) rows.push({id, name:i.name, price:i.price, qty:i.qty});
   $('itemList').innerHTML = rows.length ? rows.map(r => `
     <div class="item">
-      <div class="info"><div class="name">${esc(r.name)}</div>
+      <div class="top"><div class="name">${esc(r.name)}</div>
         <div class="muted">${baht(r.price)} • รวม <span class="num">${baht(r.qty*r.price)}</span></div></div>
       <div class="qty">
-        <button data-dec="${r.id}" aria-label="ลด">−</button>
-        <input type="number" inputmode="numeric" min="0" value="${r.qty}" data-set="${r.id}">
-        <button class="plus" data-inc="${r.id}" aria-label="เพิ่ม">+</button>
+        <button data-add="${r.id}" data-n="-1" aria-label="ลด 1">−</button>
+        <input type="number" inputmode="numeric" min="0" value="${r.qty}" data-set="${r.id}" aria-label="จำนวน ${esc(r.name)}">
+        <button class="plus" data-add="${r.id}" data-n="1" aria-label="เพิ่ม 1">+1</button>
+        <button class="quick" data-add="${r.id}" data-n="5" aria-label="เพิ่ม 5">+5</button>
+        <button class="quick" data-add="${r.id}" data-n="10" aria-label="เพิ่ม 10">+10</button>
       </div>
     </div>`).join('') : '<div class="empty">ยังไม่มีเมนู ไปเพิ่มที่แท็บ ตั้งค่า</div>';
 
@@ -504,9 +516,16 @@ function renderSettings(){
   $('shopTitle').textContent = db.shopName || 'ไก่ทอดหาดใหญ่';
   document.title = 'บัญชี' + (db.shopName || 'ไก่ทอดหาดใหญ่');
   $('prodList').innerHTML = db.products.map(p => `
-    <div class="li"><input class="f" value="${esc(p.name)}" data-pname="${p.id}" style="flex:1">
-    <input class="f" type="number" inputmode="decimal" value="${p.price}" data-pprice="${p.id}" style="width:90px;flex:none">
-    <button class="del" data-delprod="${p.id}" aria-label="ลบ">✕</button></div>`).join('') || '<div class="empty">ยังไม่มีเมนู</div>';
+    <div class="prod">
+      <div class="r"><input class="f" value="${esc(p.name)}" data-pname="${p.id}" aria-label="ชื่อเมนู">
+        <button class="del" data-delprod="${p.id}" aria-label="ลบเมนู ${esc(p.name)}">✕</button></div>
+      <div class="r"><span class="muted">ราคา (บาท)</span>
+        <span class="price-step">
+          <button data-pstep="${p.id}" data-n="-2" aria-label="ลดราคา 2 บาท">−2</button>
+          <input class="f" type="number" inputmode="decimal" step="1" value="${p.price}" data-pprice="${p.id}" aria-label="ราคา ${esc(p.name)}">
+          <button data-pstep="${p.id}" data-n="2" aria-label="เพิ่มราคา 2 บาท">+2</button>
+        </span></div>
+    </div>`).join('') || '<div class="empty">ยังไม่มีเมนู</div>';
   $('catList').innerHTML = db.categories.map((c,i) => `<div class="li"><span>${esc(c)}</span><button class="del" data-delcat="${i}" aria-label="ลบ">✕</button></div>`).join('');
 }
 
@@ -516,8 +535,8 @@ function renderAll(){ renderDay(); renderChips(); renderSettings(); if ($('tab-r
 document.addEventListener('click', async e => {
   const b = e.target.closest('button,[data-go]'); if (!b) return;
   const ds = b.dataset;
-  if (ds.inc){ const d=getDay(cur); setQty(ds.inc, (d.items[ds.inc]?.qty||0)+1); if (navigator.vibrate) navigator.vibrate(15); }
-  else if (ds.dec){ const d=getDay(cur); setQty(ds.dec, (d.items[ds.dec]?.qty||0)-1); }
+  if (ds.add){ const d=getDay(cur), n=Number(ds.n); setQty(ds.add, (d.items[ds.add]?.qty||0)+n); if (n>0 && navigator.vibrate) navigator.vibrate(15); if (n>1) toast(`+${n} ${db.products.find(p=>p.id===ds.add)?.name||''}`); }
+  else if (ds.pstep){ const p=db.products.find(x=>x.id===ds.pstep); if(!p) return; p.price=Math.max(0,p.price+Number(ds.n)); save('settings'); renderAll(); }
   else if (ds.cat){ expCat = ds.cat; renderChips(); $('expAmount').focus(); }
   else if (ds.delexp){ if(!await ask('ลบรายจ่ายนี้?')) return; const d=getDay(cur); d.expenses=d.expenses.filter(x=>x.id!==ds.delexp); cleanDay(cur); save(); renderDay(); }
   else if (ds.delprod){ if(!await ask('ลบเมนูนี้? (ข้อมูลที่บันทึกไว้แล้วยังอยู่)')) return; db.products=db.products.filter(p=>p.id!==ds.delprod); save('settings'); renderAll(); }
