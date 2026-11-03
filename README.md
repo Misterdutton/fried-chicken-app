@@ -1,4 +1,4 @@
-# fried-chicken-app
+# four-izestineton
 This is app to help for fried chicken
 
 ## RC Frame 8 — โปรแกรมวิเคราะห์โครงสร้างคอนกรีตเสริมเหล็ก
