@@ -14,27 +14,60 @@
   --brand:#b45309; --brand2:#f59e0b; --brand-soft:#fff1dc;
   --good:#15803d; --good-soft:#e7f6ec; --bad:#c2410c; --bad-soft:#fdece4;
   --shadow:0 1px 3px rgba(80,50,10,.08);
+  --on-brand:#ffffff; --head1:#92400e; --head2:#d97706;
 }
+/* colour themes (ธีมสี): light values */
+:root[data-skin="chili"]{--bg:#fff7f5;--line:#f6dcd6;--brand:#b91c1c;--brand2:#f97316;--brand-soft:#fde8e3;--head1:#7f1d1d;--head2:#dc2626}
+:root[data-skin="sea"]{--bg:#f4f8ff;--line:#d9e4f7;--brand:#1d4ed8;--brand2:#0ea5e9;--brand-soft:#e2ecfd;--head1:#1e3a8a;--head2:#0284c7}
+:root[data-skin="leaf"]{--bg:#f3faf7;--line:#d3ece3;--brand:#0f766e;--brand2:#14b8a6;--brand-soft:#dcf3ee;--head1:#134e4a;--head2:#0d9488}
+:root[data-skin="pink"]{--bg:#fff6fa;--line:#f6d9e6;--brand:#be185d;--brand2:#ec4899;--brand-soft:#fce4ef;--head1:#831843;--head2:#db2777}
+:root[data-skin="night"]{--bg:#f7f6f3;--line:#e5e1d8;--brand:#854d0e;--brand2:#ca8a04;--brand-soft:#f6eed6;--head1:#1c1917;--head2:#44403c}
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --bg:#1a1410; --card:#251d17; --ink:#f6ece1; --muted:#b9a796; --line:#3a2e24;
     --brand:#f59e0b; --brand2:#fbbf24; --brand-soft:#3a2a15;
-    --good:#4ade80; --good-soft:#163222; --bad:#fb923c; --bad-soft:#3a2016; --shadow:none; color-scheme:dark;
+    --good:#4ade80; --good-soft:#163222; --bad:#fb923c; --bad-soft:#3a2016; --shadow:none; color-scheme:dark; --on-brand:#1a1410;
   }
 }
 :root[data-theme="dark"]{
   --bg:#1a1410; --card:#251d17; --ink:#f6ece1; --muted:#b9a796; --line:#3a2e24;
   --brand:#f59e0b; --brand2:#fbbf24; --brand-soft:#3a2a15;
-  --good:#4ade80; --good-soft:#163222; --bad:#fb923c; --bad-soft:#3a2016; --shadow:none; color-scheme:dark;
+  --good:#4ade80; --good-soft:#163222; --bad:#fb923c; --bad-soft:#3a2016; --shadow:none; color-scheme:dark; --on-brand:#1a1410;
 }
+/* colour themes: dark values */
+@media (prefers-color-scheme: dark){
+  :root[data-skin="chili"]:not([data-theme="light"]){--bg:#1b1111;--card:#271818;--line:#3d2525;--brand:#f87171;--brand2:#fb923c;--brand-soft:#3d1c1c;--on-brand:#1b1111}
+  :root[data-skin="sea"]:not([data-theme="light"]){--bg:#0f1420;--card:#18202f;--line:#263247;--brand:#60a5fa;--brand2:#38bdf8;--brand-soft:#1a2a47;--on-brand:#0f1420}
+  :root[data-skin="leaf"]:not([data-theme="light"]){--bg:#0e1715;--card:#162320;--line:#233833;--brand:#2dd4bf;--brand2:#5eead4;--brand-soft:#163a35;--on-brand:#0e1715}
+  :root[data-skin="pink"]:not([data-theme="light"]){--bg:#1a1016;--card:#261821;--line:#3d2633;--brand:#f472b6;--brand2:#f9a8d4;--brand-soft:#3d1a2c;--on-brand:#1a1016}
+  :root[data-skin="night"]:not([data-theme="light"]){--bg:#121110;--card:#1c1b19;--line:#2f2c28;--brand:#facc15;--brand2:#fde047;--brand-soft:#36301a;--on-brand:#121110}
+}
+:root[data-skin="chili"][data-theme="dark"]{--bg:#1b1111;--card:#271818;--line:#3d2525;--brand:#f87171;--brand2:#fb923c;--brand-soft:#3d1c1c;--on-brand:#1b1111}
+:root[data-skin="sea"][data-theme="dark"]{--bg:#0f1420;--card:#18202f;--line:#263247;--brand:#60a5fa;--brand2:#38bdf8;--brand-soft:#1a2a47;--on-brand:#0f1420}
+:root[data-skin="leaf"][data-theme="dark"]{--bg:#0e1715;--card:#162320;--line:#233833;--brand:#2dd4bf;--brand2:#5eead4;--brand-soft:#163a35;--on-brand:#0e1715}
+:root[data-skin="pink"][data-theme="dark"]{--bg:#1a1016;--card:#261821;--line:#3d2633;--brand:#f472b6;--brand2:#f9a8d4;--brand-soft:#3d1a2c;--on-brand:#1a1016}
+:root[data-skin="night"][data-theme="dark"]{--bg:#121110;--card:#1c1b19;--line:#2f2c28;--brand:#facc15;--brand2:#fde047;--brand-soft:#36301a;--on-brand:#121110}
+:root[data-size="l"]{font-size:18px}
+:root[data-size="xl"]{font-size:20px}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{margin:0}
 body{font-family:'Prompt',system-ui,sans-serif;background:var(--bg);color:var(--ink);
   padding-bottom:calc(76px + env(safe-area-inset-bottom));-webkit-tap-highlight-color:transparent}
-header{background:linear-gradient(135deg,#92400e,#d97706);color:#fff;padding-block:14px 16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{background:linear-gradient(135deg,var(--head1),var(--head2));color:#fff;padding-block:14px 16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .sync{display:inline-block;margin-left:6px;font-size:.72rem;background:rgba(0,0,0,.2);padding:2px 8px;border-radius:999px}
-header h1{margin:0;font-size:1.15rem;font-weight:600}
+header h1{margin:0;font-size:1.15rem;font-weight:600;display:flex;align-items:center;gap:8px}
+.logo{width:36px;height:36px;border-radius:10px;object-fit:cover;background:rgba(255,255,255,.9);flex:none}
+.skins{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.skin{border:2px solid var(--line);border-radius:14px;padding:0;overflow:hidden;background:var(--card);color:var(--ink);font:inherit;font-size:.85rem;text-align:left}
+.skin.on{border-color:var(--brand);box-shadow:0 0 0 2px var(--brand-soft)}
+.skin .sw{height:34px;display:flex;align-items:flex-end;gap:4px;padding:6px}
+.skin .sw i{display:block;width:14px;height:14px;border-radius:5px;border:1px solid rgba(255,255,255,.6)}
+.skin span{display:block;padding:6px 8px}
+.skin.on span::after{content:" ✓";color:var(--brand);font-weight:700}
+.logo-row{display:flex;align-items:center;gap:10px}
+.logo-prev{width:56px;height:56px;border-radius:14px;border:1px dashed var(--line);display:flex;align-items:center;justify-content:center;font-size:1.6rem;overflow:hidden;flex:none;background:var(--brand-soft)}
+.logo-prev img{width:100%;height:100%;object-fit:cover}
 header .sub{font-size:.8rem;opacity:.85}
 .datebar{display:flex;align-items:center;gap:8px;margin-top:10px}
 .datebar button{background:rgba(255,255,255,.2);border:0;color:#fff;width:40px;height:40px;border-radius:12px;font-size:1.1rem}
@@ -58,7 +91,7 @@ main{max-width:640px;margin:0 auto;padding-block:12px;padding-left:max(16px,env(
 .qty{display:grid;grid-template-columns:1fr 1.15fr 1fr 1fr 1fr;gap:6px}
 .qty button{min-width:0;height:58px;border-radius:14px;border:0;font:inherit;font-size:1.6rem;font-weight:700;background:var(--brand-soft);color:var(--brand);touch-action:manipulation}
 .qty button:active{transform:scale(.95)}
-.qty button.plus{background:var(--brand);color:#fff}
+.qty button.plus{background:var(--brand);color:var(--on-brand)}
 .qty button.quick{font-size:1.15rem;background:var(--card);border:2px solid var(--brand);color:var(--brand)}
 .qty input{min-width:0;width:100%;height:58px;text-align:center;font:inherit;font-size:1.35rem;font-weight:700;border:2px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink)}
 .price-step{display:flex;align-items:center;gap:6px;flex:none}
@@ -69,12 +102,12 @@ main{max-width:640px;margin:0 auto;padding-block:12px;padding-left:max(16px,env(
 .prod .r{display:flex;align-items:center;gap:6px;justify-content:space-between}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
 .chip{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:8px 12px;font:inherit;font-size:.88rem}
-.chip.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+.chip.on{background:var(--brand);color:var(--on-brand);border-color:var(--brand)}
 .row{display:flex;gap:8px;margin-bottom:8px}
 .row>*{flex:1;min-width:0}
 input.f,select.f{width:100%;height:46px;border:1px solid var(--line);border-radius:12px;padding:0 12px;font:inherit;font-size:1rem;background:var(--card);color:var(--ink)}
 textarea.f{width:100%;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font:inherit;background:var(--card);color:var(--ink);min-height:60px}
-.btn{height:46px;border:0;border-radius:12px;background:var(--brand);color:#fff;font:inherit;font-weight:600;font-size:1rem;padding:0 16px;width:100%}
+.btn{height:46px;border:0;border-radius:12px;background:var(--brand);color:var(--on-brand);font:inherit;font-weight:600;font-size:1rem;padding:0 16px;width:100%}
 .btn.ghost{background:var(--brand-soft);color:var(--brand)}
 .btn.small{height:36px;font-size:.85rem;width:auto;padding:0 12px}
 .list .li{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-top:1px solid var(--line);gap:8px}
@@ -109,7 +142,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 <body>
 
 <header>
-  <h1>🍗 <span id="shopTitle">ไก่ทอดหาดใหญ่</span></h1>
+  <h1><span id="logoBox">🍗</span> <span id="shopTitle">ไก่ทอดหาดใหญ่</span></h1>
   <div class="sub">บันทึกยอดขาย • รายจ่าย • กำไร/ขาดทุน <span class="sync" id="sync">📱 เก็บในเครื่องนี้</span></div>
   <div class="datebar">
     <button id="prevDay" aria-label="วันก่อน">‹</button>
@@ -200,6 +233,24 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
       <input class="f" id="shopName" placeholder="ไก่ทอดหาดใหญ่">
     </div>
     <div class="card">
+      <h2>หน้าตาแอป</h2>
+      <div class="muted" style="margin-bottom:8px">ธีมสี</div>
+      <div class="skins" id="skinList"></div>
+      <div class="muted" style="margin:14px 0 8px">โลโก้ร้าน</div>
+      <div class="logo-row">
+        <div class="logo-prev" id="logoPrev">🍗</div>
+        <button class="btn ghost small" id="logoBtn">เลือกรูปโลโก้</button>
+        <button class="btn ghost small" id="logoDel" hidden>ใช้ไอคอนเดิม</button>
+        <input type="file" id="logoFile" accept="image/*" hidden>
+      </div>
+      <div class="muted" style="margin:14px 0 8px">ขนาดตัวหนังสือ</div>
+      <div class="seg" id="sizeSeg" style="margin:0">
+        <button data-size="">ปกติ</button>
+        <button data-size="l">ใหญ่</button>
+        <button data-size="xl">ใหญ่มาก</button>
+      </div>
+    </div>
+    <div class="card">
       <h2>เมนูและราคา</h2>
       <p class="muted" style="margin:0 0 4px">กด −2 / +2 ปรับราคาทีละ 2 บาท หรือพิมพ์ราคาเองได้ เช่น 12, 22</p>
       <div class="list" id="prodList"></div>
@@ -240,6 +291,14 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 
 <script>
 const KEY = 'hatyai-chicken-v1';
+const SKINS = [
+  {id:'gold',  name:'ส้มทอง',     c:['#92400e','#d97706','#fff1dc']},
+  {id:'chili', name:'แดงพริก',   c:['#7f1d1d','#dc2626','#fde8e3']},
+  {id:'sea',   name:'ฟ้าทะเลสาบ', c:['#1e3a8a','#0284c7','#e2ecfd']},
+  {id:'leaf',  name:'เขียวใบเตย', c:['#134e4a','#0d9488','#dcf3ee']},
+  {id:'pink',  name:'ชมพูหวาน',  c:['#831843','#db2777','#fce4ef']},
+  {id:'night', name:'ดำทอง',     c:['#1c1917','#44403c','#f6eed6']},
+];
 const DEFAULT = {
   shopName: 'ไก่ทอดหาดใหญ่',
   products: [
@@ -253,6 +312,7 @@ const DEFAULT = {
     {id:'p8', name:'ตีนไก่', price:10},
   ],
   menuAdds: ['p7','p8'],
+  skin: 'gold', textSize: '', logo: '',
   categories: ['ไก่สด','น้ำมัน','แป้ง/เครื่องปรุง','หอมแดง','ข้าวเหนียว','แก๊ส','ถุง/กล่อง','ค่าเช่าที่','ค่าแรง','อื่นๆ'],
   days: {}
 };
@@ -278,6 +338,9 @@ function normSettings(d, base){
   if (Array.isArray(d.products)) base.products = d.products
     .filter(p => p && p.id && p.name)
     .map(p => ({id: String(p.id), name: String(p.name), price: num(p.price)}));
+  if (typeof d.skin === 'string' && SKINS.some(k => k.id === d.skin)) base.skin = d.skin;
+  if (['','l','xl'].includes(d.textSize)) base.textSize = d.textSize;
+  if (typeof d.logo === 'string' && (d.logo === '' || /^data:image\/(png|jpeg|webp);base64,/.test(d.logo)) && d.logo.length < 200000) base.logo = d.logo;
   if (Array.isArray(d.menuAdds)) base.menuAdds = d.menuAdds.filter(x => typeof x === 'string');
   else if (Array.isArray(d.products)) base.menuAdds = [];
   if (Array.isArray(d.categories)){
@@ -329,7 +392,7 @@ async function flush(){
   const keys = [...dirty]; dirty.clear(); keys.forEach(k => inflight.add(k));
   try{
     for (const k of keys){
-      if (k==='settings') await remote.doc('app/settings').set({shopName:db.shopName, products:db.products, categories:db.categories, menuAdds:db.menuAdds});
+      if (k==='settings') await remote.doc('app/settings').set({shopName:db.shopName, products:db.products, categories:db.categories, menuAdds:db.menuAdds, skin:db.skin, textSize:db.textSize, logo:db.logo});
       else if (db.days[k]) await remote.doc('days/'+k).set(JSON.parse(JSON.stringify(db.days[k])));
       else await remote.doc('days/'+k).delete();
     }
@@ -528,7 +591,22 @@ function drawChart(series){
 }
 
 /* ---------- Render: settings ---------- */
+function applyLook(){
+  const r = document.documentElement;
+  if (db.skin && db.skin !== 'gold') r.dataset.skin = db.skin; else delete r.dataset.skin;
+  if (db.textSize) r.dataset.size = db.textSize; else delete r.dataset.size;
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.content = (SKINS.find(k => k.id === db.skin) || SKINS[0]).c[0];
+  const logo = db.logo ? `<img class="logo" src="${db.logo}" alt="">` : '🍗';
+  $('logoBox').innerHTML = logo;
+  $('logoPrev').innerHTML = db.logo ? `<img src="${db.logo}" alt="โลโก้ร้าน">` : '🍗';
+  $('logoDel').hidden = !db.logo;
+  $('skinList').innerHTML = SKINS.map(k => `<button class="skin ${k.id===db.skin?'on':''}" data-skin="${k.id}" aria-pressed="${k.id===db.skin}">
+    <div class="sw" style="background:linear-gradient(135deg,${k.c[0]},${k.c[1]})"><i style="background:${k.c[2]}"></i></div><span>${k.name}</span></button>`).join('');
+  document.querySelectorAll('#sizeSeg button').forEach(b => b.classList.toggle('on', b.dataset.size === (db.textSize||'')));
+}
 function renderSettings(){
+  applyLook();
   $('shopName').value = db.shopName;
   $('shopTitle').textContent = db.shopName || 'ไก่ทอดหาดใหญ่';
   document.title = 'บัญชี' + (db.shopName || 'ไก่ทอดหาดใหญ่');
@@ -559,6 +637,8 @@ document.addEventListener('click', async e => {
   else if (ds.delprod){ if(!await ask('ลบเมนูนี้? (ข้อมูลที่บันทึกไว้แล้วยังอยู่)')) return; db.products=db.products.filter(p=>p.id!==ds.delprod); save('settings'); renderAll(); }
   else if (ds.delcat){ if (db.categories.length<=1){ toast('ต้องมีอย่างน้อย 1 หมวด'); return; } db.categories.splice(Number(ds.delcat),1); save('settings'); renderAll(); }
   else if (ds.tab){ document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x===b)); document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on', t.id==='tab-'+ds.tab)); $('dayCard').hidden = ds.tab==='report'||ds.tab==='settings'; if (ds.tab==='report') renderReport(); window.scrollTo(0,0); }
+  else if (b.classList.contains('skin')){ db.skin = ds.skin; save('settings'); applyLook(); toast('เปลี่ยนธีมเป็น ' + SKINS.find(k=>k.id===db.skin).name); }
+  else if (b.closest('#sizeSeg')){ db.textSize = ds.size || ''; save('settings'); applyLook(); }
   else if (ds.r){ range = ds.r; document.querySelectorAll('#rangeSeg button').forEach(x=>x.classList.toggle('on',x===b)); renderReport(); }
   else if (ds.go){ cur = ds.go; document.querySelector('nav button[data-tab="sell"]').click(); renderDay(); }
 });
@@ -614,6 +694,22 @@ $('exportCsv').onclick = () => {
     const t=totals(d); rows.push([s,'สรุปวัน',t.profit>=0?'กำไร':'ขาดทุน','','',t.profit,d.note||'']);
   }
   download(`hatyai-chicken-${today()}.csv`, '﻿' + rows.map(r=>r.map(q).join(',')).join('\n'), 'text/csv');
+};
+$('logoBtn').onclick = () => $('logoFile').click();
+$('logoDel').onclick = () => { db.logo = ''; save('settings'); applyLook(); };
+$('logoFile').onchange = e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  const img = new Image(), url = URL.createObjectURL(f);
+  img.onload = () => {
+    const S = 128, c = document.createElement('canvas'); c.width = c.height = S;
+    const k = Math.max(S/img.width, S/img.height), w = img.width*k, h = img.height*k;
+    const g = c.getContext('2d'); g.fillStyle = '#ffffff'; g.fillRect(0,0,S,S);
+    g.drawImage(img, (S-w)/2, (S-h)/2, w, h);
+    URL.revokeObjectURL(url);
+    db.logo = c.toDataURL('image/jpeg', 0.85); save('settings'); applyLook(); toast('ใส่โลโก้แล้ว');
+  };
+  img.onerror = () => { URL.revokeObjectURL(url); toast('เปิดรูปนี้ไม่ได้ ลองรูปอื่น'); };
+  img.src = url;
 };
 $('importBtn').onclick = () => $('importFile').click();
 $('importFile').onchange = async e => {
