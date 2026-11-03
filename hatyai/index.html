@@ -249,7 +249,10 @@ const DEFAULT = {
     {id:'p4', name:'ข้าวเหนียว', price:10},
     {id:'p5', name:'หอมเจียว (ถุง)', price:10},
     {id:'p6', name:'ชุดไก่+ข้าวเหนียว', price:35},
+    {id:'p7', name:'เครื่องในไก่', price:20},
+    {id:'p8', name:'ตีนไก่', price:10},
   ],
+  menuAdds: ['p7','p8'],
   categories: ['ไก่สด','น้ำมัน','แป้ง/เครื่องปรุง','หอมแดง','ข้าวเหนียว','แก๊ส','ถุง/กล่อง','ค่าเช่าที่','ค่าแรง','อื่นๆ'],
   days: {}
 };
@@ -275,6 +278,8 @@ function normSettings(d, base){
   if (Array.isArray(d.products)) base.products = d.products
     .filter(p => p && p.id && p.name)
     .map(p => ({id: String(p.id), name: String(p.name), price: num(p.price)}));
+  if (Array.isArray(d.menuAdds)) base.menuAdds = d.menuAdds.filter(x => typeof x === 'string');
+  else if (Array.isArray(d.products)) base.menuAdds = [];
   if (Array.isArray(d.categories)){
     const c = [...new Set(d.categories.filter(x => typeof x === 'string' && x.trim()))];
     if (c.length) base.categories = c;
@@ -294,7 +299,19 @@ function load(){
   }catch(e){}
   return clone(DEFAULT);
 }
+// Add new built-in menus to a menu list saved before they existed
+function addNewMenus(){
+  let changed = false;
+  for (const id of DEFAULT.menuAdds){
+    if (db.menuAdds.includes(id)) continue;
+    const def = DEFAULT.products.find(p => p.id === id);
+    if (!db.products.some(p => p.id === id || p.name === def.name)) db.products.push({...def});
+    db.menuAdds.push(id); changed = true;
+  }
+  return changed;
+}
 let db = load();
+if (addNewMenus()) { try{ localStorage.setItem(KEY, JSON.stringify(db)); }catch(e){} }
 let cur = today();
 let expCat = db.categories[0];
 let range = '7';
@@ -312,7 +329,7 @@ async function flush(){
   const keys = [...dirty]; dirty.clear(); keys.forEach(k => inflight.add(k));
   try{
     for (const k of keys){
-      if (k==='settings') await remote.doc('app/settings').set({shopName:db.shopName, products:db.products, categories:db.categories});
+      if (k==='settings') await remote.doc('app/settings').set({shopName:db.shopName, products:db.products, categories:db.categories, menuAdds:db.menuAdds});
       else if (db.days[k]) await remote.doc('days/'+k).set(JSON.parse(JSON.stringify(db.days[k])));
       else await remote.doc('days/'+k).delete();
     }
@@ -340,7 +357,7 @@ async function connect(){
     if (dirty.size) flush(); else setSync('☁️ บันทึกออนไลน์แล้ว');
   };
   store.doc('app/settings').onSnapshot(snap => {
-    if (snap.exists){ if (!pending('settings')){ normSettings(snap.data() || {}, db); renderAll(); } }
+    if (snap.exists){ if (!pending('settings')){ normSettings(snap.data() || {}, db); if (addNewMenus()) save('settings'); renderAll(); } }
     else if (!gotSettings && JSON.stringify([db.shopName,db.products,db.categories]) !== JSON.stringify([DEFAULT.shopName,DEFAULT.products,DEFAULT.categories])) dirty.add('settings');
     gotSettings = true; ready();
   }, () => setSync('⚠️ โหลดข้อมูลไม่สำเร็จ'));
@@ -606,7 +623,7 @@ $('importFile').onchange = async e => {
     if (!d || !Array.isArray(d.products) || typeof d.days !== 'object') throw 0;
     if (!await ask('กู้คืนจะแทนที่ข้อมูลปัจจุบันทั้งหมด ดำเนินการต่อ?')) { e.target.value=''; return; }
     const old = Object.keys(db.days);
-    db = normalize(d);
+    db = normalize(d); addNewMenus();
     save('settings', ...new Set([...old, ...Object.keys(db.days)])); renderAll(); toast('กู้คืนข้อมูลแล้ว');
   }catch(err){ toast('ไฟล์ไม่ถูกต้อง'); }
   e.target.value='';
