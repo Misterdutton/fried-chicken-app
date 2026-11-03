@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#b45309">
 <title>บัญชีไก่ทอดหาดใหญ่</title>
+<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -18,20 +19,27 @@
   :root:not([data-theme="light"]){
     --bg:#1a1410; --card:#251d17; --ink:#f6ece1; --muted:#b9a796; --line:#3a2e24;
     --brand:#f59e0b; --brand2:#fbbf24; --brand-soft:#3a2a15;
-    --good:#4ade80; --good-soft:#163222; --bad:#fb923c; --bad-soft:#3a2016; --shadow:none;
+    --good:#4ade80; --good-soft:#163222; --bad:#fb923c; --bad-soft:#3a2016; --shadow:none; color-scheme:dark;
   }
 }
+:root[data-theme="dark"]{
+  --bg:#1a1410; --card:#251d17; --ink:#f6ece1; --muted:#b9a796; --line:#3a2e24;
+  --brand:#f59e0b; --brand2:#fbbf24; --brand-soft:#3a2a15;
+  --good:#4ade80; --good-soft:#163222; --bad:#fb923c; --bad-soft:#3a2016; --shadow:none; color-scheme:dark;
+}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html,body{margin:0}
 body{font-family:'Prompt',system-ui,sans-serif;background:var(--bg);color:var(--ink);
   padding-bottom:calc(76px + env(safe-area-inset-bottom));-webkit-tap-highlight-color:transparent}
-header{background:linear-gradient(135deg,#92400e,#d97706);color:#fff;padding:14px 16px 16px}
+header{background:linear-gradient(135deg,#92400e,#d97706);color:#fff;padding-block:14px 16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.sync{display:inline-block;margin-left:6px;font-size:.72rem;background:rgba(0,0,0,.2);padding:2px 8px;border-radius:999px}
 header h1{margin:0;font-size:1.15rem;font-weight:600}
 header .sub{font-size:.8rem;opacity:.85}
 .datebar{display:flex;align-items:center;gap:8px;margin-top:10px}
 .datebar button{background:rgba(255,255,255,.2);border:0;color:#fff;width:40px;height:40px;border-radius:12px;font-size:1.1rem}
 .datebar input{flex:1;min-width:0;height:40px;border-radius:12px;border:0;padding:0 10px;font:inherit;font-size:1rem;background:#fff;color:#2b2118}
-main{max-width:640px;margin:0 auto;padding:12px 16px}
+main{max-width:640px;margin:0 auto;padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px;box-shadow:var(--shadow)}
 .card h2{font-size:1rem;margin:0 0 10px;font-weight:600;display:flex;justify-content:space-between;align-items:center}
 .muted{color:var(--muted);font-size:.85rem}
@@ -65,7 +73,7 @@ textarea.f{width:100%;border:1px solid var(--line);border-radius:12px;padding:10
 .del{border:0;background:transparent;color:var(--bad);font-size:1.1rem;width:36px;height:36px}
 .num{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
 .pos{color:var(--good)} .neg{color:var(--bad)}
-nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:10}
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px);z-index:10}
 nav button{flex:1;border:0;background:transparent;color:var(--muted);font:inherit;font-size:.75rem;padding:8px 0 10px;display:flex;flex-direction:column;align-items:center;gap:2px}
 nav button .ic{font-size:1.35rem}
 nav button.on{color:var(--brand);font-weight:600}
@@ -82,13 +90,18 @@ nav button.on{color:var(--brand);font-weight:600}
 .toast.on{opacity:1}
 .empty{text-align:center;color:var(--muted);padding:18px 0;font-size:.9rem}
 .day{cursor:pointer}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:30}
+.modal .box{background:var(--card);color:var(--ink);border-radius:16px;padding:18px;max-width:340px;width:100%}
+.modal .box p{margin:0 0 14px;line-height:1.5}
+.modal .row{margin:0}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--brand2);outline-offset:2px}
 </style>
 </head>
 <body>
 
 <header>
   <h1>🍗 <span id="shopTitle">ไก่ทอดหาดใหญ่</span></h1>
-  <div class="sub">บันทึกยอดขาย • รายจ่าย • กำไร/ขาดทุน</div>
+  <div class="sub">บันทึกยอดขาย • รายจ่าย • กำไร/ขาดทุน <span class="sync" id="sync">📱 เก็บในเครื่องนี้</span></div>
   <div class="datebar">
     <button id="prevDay" aria-label="วันก่อน">‹</button>
     <input type="date" id="date">
@@ -196,7 +209,7 @@ nav button.on{color:var(--brand);font-weight:600}
     </div>
     <div class="card">
       <h2>สำรองข้อมูล</h2>
-      <p class="muted" style="margin-top:0">ข้อมูลเก็บในเครื่องนี้ (เบราว์เซอร์นี้) เท่านั้น ควรสำรองไว้เป็นระยะ</p>
+      <p class="muted" style="margin-top:0" id="backupNote">ข้อมูลเก็บในเครื่องนี้ (เบราว์เซอร์นี้) เท่านั้น ควรสำรองไว้เป็นระยะ</p>
       <div class="row"><button class="btn ghost" id="exportCsv">ส่งออก Excel (CSV)</button></div>
       <div class="row"><button class="btn ghost" id="exportJson">สำรองข้อมูล (ไฟล์)</button></div>
       <div class="row"><button class="btn ghost" id="importBtn">กู้คืนจากไฟล์สำรอง</button></div>
@@ -212,6 +225,8 @@ nav button.on{color:var(--brand);font-weight:600}
   <button data-tab="settings"><span class="ic">⚙️</span>ตั้งค่า</button>
 </nav>
 <div class="toast" id="toast"></div>
+<div class="modal" id="modal" hidden><div class="box"><p id="modalMsg"></p>
+  <div class="row"><button class="btn ghost" id="modalNo">ยกเลิก</button><button class="btn" id="modalYes">ยืนยัน</button></div></div></div>
 
 <script>
 const KEY = 'hatyai-chicken-v1';
@@ -241,9 +256,56 @@ function load(){
   }catch(e){}
   return structuredClone(DEFAULT);
 }
-function save(){
-  try{ localStorage.setItem(KEY, JSON.stringify(db)); }
-  catch(e){ toast('บันทึกไม่สำเร็จ: เบราว์เซอร์ไม่อนุญาตให้เก็บข้อมูล'); }
+/* Storage: browser storage always; online store (Claude viewer) when available */
+let remote = null, dirty = new Set(), flushT = null;
+function save(...keys){
+  try{ localStorage.setItem(KEY, JSON.stringify(db)); }catch(e){}
+  if (!remote) return;
+  for (const k of (keys.length ? keys : [cur])) dirty.add(k);
+  clearTimeout(flushT); flushT = setTimeout(flush, 400);
+}
+async function flush(){
+  const keys = [...dirty]; dirty.clear();
+  try{
+    for (const k of keys){
+      if (k==='settings') await remote.doc('app/settings').set({shopName:db.shopName, products:db.products, categories:db.categories});
+      else if (db.days[k]) await remote.doc('days/'+k).set(JSON.parse(JSON.stringify(db.days[k])));
+      else await remote.doc('days/'+k).delete();
+    }
+    setSync('☁️ บันทึกออนไลน์แล้ว');
+  }catch(e){ keys.forEach(k=>dirty.add(k)); setSync('⚠️ บันทึกออนไลน์ไม่สำเร็จ'); }
+}
+function setSync(t){ $('sync').textContent = t; }
+async function connect(){
+  const use = window.claude && window.claude.use;
+  if (!use) return;
+  let store = null;
+  try{ store = await window.claude.use('db'); }catch(e){}
+  if (!store) return;
+  remote = store;
+  setSync('⏳ กำลังโหลด…');
+  $('backupNote').textContent = 'ข้อมูลบันทึกออนไลน์อัตโนมัติ เปิดจากเครื่องไหนก็เห็น ส่งออกไฟล์ไว้เก็บเพิ่มได้';
+  const timer = setTimeout(()=>setSync('⚠️ โหลดข้อมูลไม่สำเร็จ'), 10000);
+  remote.doc('app/settings').onSnapshot(snap => {
+    clearTimeout(timer);
+    if (snap.exists && !dirty.has('settings')){ Object.assign(db, snap.data()); renderAll(); }
+    setSync('☁️ บันทึกออนไลน์แล้ว');
+  }, () => setSync('⚠️ โหลดข้อมูลไม่สำเร็จ'));
+  remote.collection('days').onSnapshot(snap => {
+    clearTimeout(timer);
+    const days = {};
+    snap.docs.forEach(d => { days[d.id] = d.data(); });
+    for (const k of dirty) if (k!=='settings'){ if (db.days[k]) days[k]=db.days[k]; else delete days[k]; }
+    db.days = days; renderAll();
+    setSync('☁️ บันทึกออนไลน์แล้ว');
+  }, () => setSync('⚠️ โหลดข้อมูลไม่สำเร็จ'));
+}
+function ask(msg){
+  return new Promise(res => {
+    $('modalMsg').textContent = msg; $('modal').hidden = false;
+    const done = v => { $('modal').hidden = true; $('modalYes').onclick = $('modalNo').onclick = null; res(v); };
+    $('modalYes').onclick = () => done(true); $('modalNo').onclick = () => done(false);
+  });
 }
 const $ = id => document.getElementById(id);
 const fmt = n => (Math.round(n*100)/100).toLocaleString('th-TH',{maximumFractionDigits:2});
@@ -402,24 +464,24 @@ function renderSettings(){
 function renderAll(){ renderDay(); renderChips(); renderSettings(); if ($('tab-report').classList.contains('on')) renderReport(); }
 
 /* ---------- Events ---------- */
-document.addEventListener('click', e => {
+document.addEventListener('click', async e => {
   const b = e.target.closest('button,[data-go]'); if (!b) return;
   const ds = b.dataset;
   if (ds.inc){ const d=getDay(cur); setQty(ds.inc, (d.items[ds.inc]?.qty||0)+1); if (navigator.vibrate) navigator.vibrate(15); }
   else if (ds.dec){ const d=getDay(cur); setQty(ds.dec, (d.items[ds.dec]?.qty||0)-1); }
   else if (ds.cat){ expCat = ds.cat; renderChips(); $('expAmount').focus(); }
-  else if (ds.delexp){ if(!confirm('ลบรายจ่ายนี้?')) return; const d=getDay(cur); d.expenses=d.expenses.filter(x=>x.id!==ds.delexp); cleanDay(cur); save(); renderDay(); }
-  else if (ds.delprod){ if(!confirm('ลบเมนูนี้? (ข้อมูลที่บันทึกไว้แล้วยังอยู่)')) return; db.products=db.products.filter(p=>p.id!==ds.delprod); save(); renderAll(); }
-  else if (ds.delcat){ db.categories.splice(Number(ds.delcat),1); save(); renderAll(); }
-  else if (ds.tab){ document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x===b)); document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on', t.id==='tab-'+ds.tab)); $('dayCard').style.display = ds.tab==='report'||ds.tab==='settings' ? 'none' : ''; if (ds.tab==='report') renderReport(); window.scrollTo(0,0); }
+  else if (ds.delexp){ if(!await ask('ลบรายจ่ายนี้?')) return; const d=getDay(cur); d.expenses=d.expenses.filter(x=>x.id!==ds.delexp); cleanDay(cur); save(); renderDay(); }
+  else if (ds.delprod){ if(!await ask('ลบเมนูนี้? (ข้อมูลที่บันทึกไว้แล้วยังอยู่)')) return; db.products=db.products.filter(p=>p.id!==ds.delprod); save('settings'); renderAll(); }
+  else if (ds.delcat){ db.categories.splice(Number(ds.delcat),1); save('settings'); renderAll(); }
+  else if (ds.tab){ document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x===b)); document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on', t.id==='tab-'+ds.tab)); $('dayCard').hidden = ds.tab==='report'||ds.tab==='settings'; if (ds.tab==='report') renderReport(); window.scrollTo(0,0); }
   else if (ds.r){ range = ds.r; document.querySelectorAll('#rangeSeg button').forEach(x=>x.classList.toggle('on',x===b)); renderReport(); }
   else if (ds.go){ cur = ds.go; document.querySelector('nav button[data-tab="sell"]').click(); renderDay(); }
 });
 document.addEventListener('change', e => {
   const ds = e.target.dataset;
   if (ds.set) setQty(ds.set, e.target.value);
-  else if (ds.pname){ const p=db.products.find(x=>x.id===ds.pname); p.name=e.target.value.trim()||p.name; save(); renderAll(); }
-  else if (ds.pprice){ const p=db.products.find(x=>x.id===ds.pprice); p.price=Math.max(0,Number(e.target.value)||0); save(); renderAll(); toast('เปลี่ยนราคาแล้ว (มีผลกับการขายใหม่)'); }
+  else if (ds.pname){ const p=db.products.find(x=>x.id===ds.pname); p.name=e.target.value.trim()||p.name; save('settings'); renderAll(); }
+  else if (ds.pprice){ const p=db.products.find(x=>x.id===ds.pprice); p.price=Math.max(0,Number(e.target.value)||0); save('settings'); renderAll(); toast('เปลี่ยนราคาแล้ว (มีผลกับการขายใหม่)'); }
 });
 $('date').addEventListener('change', e => { if (e.target.value){ cur = e.target.value; renderDay(); } });
 $('prevDay').onclick = () => { cur = shift(cur,-1); renderDay(); };
@@ -433,19 +495,26 @@ $('addExp').onclick = () => {
   save(); renderDay(); toast('บันทึก ' + expCat + ' ' + baht(amt));
 };
 $('expAmount').addEventListener('keydown', e => { if (e.key==='Enter') $('addExp').click(); });
-$('shopName').addEventListener('change', e => { db.shopName = e.target.value.trim() || 'ไก่ทอดหาดใหญ่'; save(); renderSettings(); });
+$('shopName').addEventListener('change', e => { db.shopName = e.target.value.trim() || 'ไก่ทอดหาดใหญ่'; save('settings'); renderSettings(); });
 $('addProd').onclick = () => {
   const n=$('newName').value.trim(), pr=Number($('newPrice').value);
   if (!n || !(pr>=0) || $('newPrice').value==='') { toast('ใส่ชื่อเมนูและราคา'); return; }
   db.products.push({id:'p'+uid(), name:n, price:pr}); $('newName').value=''; $('newPrice').value='';
-  save(); renderAll(); toast('เพิ่ม ' + n);
+  save('settings'); renderAll(); toast('เพิ่ม ' + n);
 };
 $('addCat').onclick = () => {
   const n=$('newCat').value.trim(); if(!n || db.categories.includes(n)) return;
-  db.categories.push(n); $('newCat').value=''; save(); renderAll();
+  db.categories.push(n); $('newCat').value=''; save('settings'); renderAll();
 };
 
-function download(name, text, type){
+async function download(name, text, type){
+  let dl = null;
+  try{ if (window.claude && window.claude.use) dl = await window.claude.use('downloads'); }catch(e){}
+  if (dl){
+    try{ await dl.save({filename:name, data:new Blob([text],{type})}); toast('บันทึกไฟล์แล้ว'); }
+    catch(e){ if (e && e.code!=='declined') toast('บันทึกไฟล์ไม่สำเร็จ'); }
+    return;
+  }
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([text],{type})); a.download=name; a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
 }
@@ -467,13 +536,16 @@ $('importFile').onchange = async e => {
   try{
     const d = JSON.parse(await f.text());
     if (!d.products || !d.days) throw 0;
-    if (!confirm('กู้คืนจะแทนที่ข้อมูลปัจจุบันทั้งหมด ดำเนินการต่อ?')) return;
-    db = Object.assign(structuredClone(DEFAULT), d); save(); renderAll(); toast('กู้คืนข้อมูลแล้ว');
+    if (!await ask('กู้คืนจะแทนที่ข้อมูลปัจจุบันทั้งหมด ดำเนินการต่อ?')) { e.target.value=''; return; }
+    const old = Object.keys(db.days);
+    db = Object.assign(structuredClone(DEFAULT), d);
+    save('settings', ...new Set([...old, ...Object.keys(db.days)])); renderAll(); toast('กู้คืนข้อมูลแล้ว');
   }catch(err){ toast('ไฟล์ไม่ถูกต้อง'); }
   e.target.value='';
 };
 
 renderAll();
+connect();
 </script>
 </body>
 </html>
