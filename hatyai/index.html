@@ -86,7 +86,7 @@ nav button.on{color:var(--brand);font-weight:600}
 .bar-row .lbl{width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bar-row .track{flex:1;height:12px;background:var(--brand-soft);border-radius:6px;overflow:hidden}
 .bar-row .fill{height:100%;background:var(--brand2);border-radius:6px}
-.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#2b2118;color:#fff;padding:10px 16px;border-radius:12px;font-size:.9rem;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20}
+.toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#2b2118;color:#fff;padding:10px 16px;border-radius:12px;font-size:.9rem;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20}
 .toast.on{opacity:1}
 .empty{text-align:center;color:var(--muted);padding:18px 0;font-size:.9rem}
 .day{cursor:pointer}
@@ -244,37 +244,75 @@ const DEFAULT = {
   days: {}
 };
 
+
+const clone = o => JSON.parse(JSON.stringify(o));
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const num = v => { const n = Number(v); return isFinite(n) && n > 0 ? n : 0; };
+function normDay(d){
+  d = d && typeof d === 'object' ? d : {};
+  const items = {};
+  for (const [id,i] of Object.entries(d.items && typeof d.items === 'object' ? d.items : {})){
+    const qty = Math.floor(num(i && i.qty));
+    if (qty) items[id] = {name: String((i && i.name) || 'ไม่ทราบชื่อ'), price: num(i.price), qty};
+  }
+  const expenses = (Array.isArray(d.expenses) ? d.expenses : [])
+    .filter(e => e && num(e.amount))
+    .map(e => ({id: String(e.id || uid()), cat: String(e.cat || 'อื่นๆ'), amount: num(e.amount), note: String(e.note || '')}));
+  return {items, expenses, note: typeof d.note === 'string' ? d.note : ''};
+}
+function normSettings(d, base){
+  if (typeof d.shopName === 'string' && d.shopName.trim()) base.shopName = d.shopName;
+  if (Array.isArray(d.products)) base.products = d.products
+    .filter(p => p && p.id && p.name)
+    .map(p => ({id: String(p.id), name: String(p.name), price: num(p.price)}));
+  if (Array.isArray(d.categories)){
+    const c = [...new Set(d.categories.filter(x => typeof x === 'string' && x.trim()))];
+    if (c.length) base.categories = c;
+  }
+  return base;
+}
+function normalize(d){
+  const out = normSettings(d || {}, clone(DEFAULT));
+  out.days = {};
+  for (const [k,v] of Object.entries((d && d.days) || {})) if (DATE_RE.test(k)) out.days[k] = normDay(v);
+  return out;
+}
+function load(){
+  try{
+    const d = JSON.parse(localStorage.getItem(KEY));
+    if (d && d.products) return normalize(d);
+  }catch(e){}
+  return clone(DEFAULT);
+}
 let db = load();
 let cur = today();
 let expCat = db.categories[0];
 let range = '7';
 
-function load(){
-  try{
-    const d = JSON.parse(localStorage.getItem(KEY));
-    if (d && d.products) return Object.assign(structuredClone(DEFAULT), d);
-  }catch(e){}
-  return structuredClone(DEFAULT);
-}
 /* Storage: browser storage always; online store (Claude viewer) when available */
-let remote = null, dirty = new Set(), flushT = null;
+let remote = null, dirty = new Set(), inflight = new Set(), flushT = null;
 function save(...keys){
   try{ localStorage.setItem(KEY, JSON.stringify(db)); }catch(e){}
-  if (!remote) return;
   for (const k of (keys.length ? keys : [cur])) dirty.add(k);
+  if (!remote) return;
   clearTimeout(flushT); flushT = setTimeout(flush, 400);
 }
 async function flush(){
-  const keys = [...dirty]; dirty.clear();
+  if (inflight.size) { flushT = setTimeout(flush, 300); return; }
+  const keys = [...dirty]; dirty.clear(); keys.forEach(k => inflight.add(k));
   try{
     for (const k of keys){
       if (k==='settings') await remote.doc('app/settings').set({shopName:db.shopName, products:db.products, categories:db.categories});
       else if (db.days[k]) await remote.doc('days/'+k).set(JSON.parse(JSON.stringify(db.days[k])));
       else await remote.doc('days/'+k).delete();
     }
-    setSync('☁️ บันทึกออนไลน์แล้ว');
-  }catch(e){ keys.forEach(k=>dirty.add(k)); setSync('⚠️ บันทึกออนไลน์ไม่สำเร็จ'); }
+    setSync(dirty.size ? '⏳ กำลังบันทึก…' : '☁️ บันทึกออนไลน์แล้ว');
+  }catch(e){
+    keys.forEach(k=>dirty.add(k)); setSync('⚠️ บันทึกออนไลน์ไม่สำเร็จ จะลองใหม่');
+    clearTimeout(flushT); flushT = setTimeout(flush, 5000);
+  }finally{ inflight.clear(); }
 }
+const pending = k => dirty.has(k) || inflight.has(k);
 function setSync(t){ $('sync').textContent = t; }
 async function connect(){
   const use = window.claude && window.claude.use;
@@ -282,22 +320,32 @@ async function connect(){
   let store = null;
   try{ store = await window.claude.use('db'); }catch(e){}
   if (!store) return;
-  remote = store;
   setSync('⏳ กำลังโหลด…');
+  let gotSettings = false, gotDays = false;
   $('backupNote').textContent = 'ข้อมูลบันทึกออนไลน์อัตโนมัติ เปิดจากเครื่องไหนก็เห็น ส่งออกไฟล์ไว้เก็บเพิ่มได้';
   const timer = setTimeout(()=>setSync('⚠️ โหลดข้อมูลไม่สำเร็จ'), 10000);
-  remote.doc('app/settings').onSnapshot(snap => {
-    clearTimeout(timer);
-    if (snap.exists && !dirty.has('settings')){ Object.assign(db, snap.data()); renderAll(); }
-    setSync('☁️ บันทึกออนไลน์แล้ว');
+  const ready = () => {
+    if (!gotSettings || !gotDays || remote) return;
+    clearTimeout(timer); remote = store;
+    if (dirty.size) flush(); else setSync('☁️ บันทึกออนไลน์แล้ว');
+  };
+  store.doc('app/settings').onSnapshot(snap => {
+    if (snap.exists){ if (!pending('settings')){ normSettings(snap.data() || {}, db); renderAll(); } }
+    else if (!gotSettings && JSON.stringify([db.shopName,db.products,db.categories]) !== JSON.stringify([DEFAULT.shopName,DEFAULT.products,DEFAULT.categories])) dirty.add('settings');
+    gotSettings = true; ready();
   }, () => setSync('⚠️ โหลดข้อมูลไม่สำเร็จ'));
-  remote.collection('days').onSnapshot(snap => {
-    clearTimeout(timer);
-    const days = {};
-    snap.docs.forEach(d => { days[d.id] = d.data(); });
-    for (const k of dirty) if (k!=='settings'){ if (db.days[k]) days[k]=db.days[k]; else delete days[k]; }
-    db.days = days; renderAll();
-    setSync('☁️ บันทึกออนไลน์แล้ว');
+  store.collection('days').onSnapshot(snap => {
+    if (!gotDays && snap.empty && Object.keys(db.days).length){
+      Object.keys(db.days).forEach(k => dirty.add(k));   // first use online: keep what was saved on this phone
+    } else {
+      const days = {};
+      snap.docs.forEach(d => { if (DATE_RE.test(d.id)) days[d.id] = normDay(d.data()); });
+      for (const k of [...dirty, ...inflight]) if (k!=='settings'){ if (db.days[k]) days[k]=db.days[k]; else delete days[k]; }
+      db.days = days;
+      try{ localStorage.setItem(KEY, JSON.stringify(db)); }catch(e){}
+      renderAll();
+    }
+    gotDays = true; ready();
   }, () => setSync('⚠️ โหลดข้อมูลไม่สำเร็จ'));
 }
 function ask(msg){
@@ -331,7 +379,8 @@ function totals(d){
   let income=0, count=0, expense=0;
   for (const i of Object.values(d.items)){ income += i.qty*i.price; count += i.qty; }
   for (const e of d.expenses) expense += e.amount;
-  return {income, expense, profit: income-expense, count};
+  const r = n => Math.round(n*100)/100;
+  return {income: r(income), expense: r(expense), profit: r(income-expense), count};
 }
 function setProfit(box, lbl, val, p, label){
   box.classList.toggle('good', p>=0); box.classList.toggle('bad', p<0);
@@ -409,7 +458,7 @@ function renderReport(){
   });
   $('rIncome').textContent = baht(inc);
   $('rExpense').textContent = baht(exp);
-  setProfit($('rProfitBox'), $('rProfitLbl'), $('rProfit'), inc-exp, 'สุทธิ');
+  setProfit($('rProfitBox'), $('rProfitLbl'), $('rProfit'), Math.round((inc-exp)*100)/100, 'สุทธิ');
   $('rDays').textContent = active ? `${active} วันที่มีบันทึก • เฉลี่ย ${baht((inc-exp)/active)}/วัน` : '';
 
   drawChart(series);
@@ -472,7 +521,7 @@ document.addEventListener('click', async e => {
   else if (ds.cat){ expCat = ds.cat; renderChips(); $('expAmount').focus(); }
   else if (ds.delexp){ if(!await ask('ลบรายจ่ายนี้?')) return; const d=getDay(cur); d.expenses=d.expenses.filter(x=>x.id!==ds.delexp); cleanDay(cur); save(); renderDay(); }
   else if (ds.delprod){ if(!await ask('ลบเมนูนี้? (ข้อมูลที่บันทึกไว้แล้วยังอยู่)')) return; db.products=db.products.filter(p=>p.id!==ds.delprod); save('settings'); renderAll(); }
-  else if (ds.delcat){ db.categories.splice(Number(ds.delcat),1); save('settings'); renderAll(); }
+  else if (ds.delcat){ if (db.categories.length<=1){ toast('ต้องมีอย่างน้อย 1 หมวด'); return; } db.categories.splice(Number(ds.delcat),1); save('settings'); renderAll(); }
   else if (ds.tab){ document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x===b)); document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on', t.id==='tab-'+ds.tab)); $('dayCard').hidden = ds.tab==='report'||ds.tab==='settings'; if (ds.tab==='report') renderReport(); window.scrollTo(0,0); }
   else if (ds.r){ range = ds.r; document.querySelectorAll('#rangeSeg button').forEach(x=>x.classList.toggle('on',x===b)); renderReport(); }
   else if (ds.go){ cur = ds.go; document.querySelector('nav button[data-tab="sell"]').click(); renderDay(); }
@@ -535,10 +584,10 @@ $('importFile').onchange = async e => {
   const f = e.target.files[0]; if (!f) return;
   try{
     const d = JSON.parse(await f.text());
-    if (!d.products || !d.days) throw 0;
+    if (!d || !Array.isArray(d.products) || typeof d.days !== 'object') throw 0;
     if (!await ask('กู้คืนจะแทนที่ข้อมูลปัจจุบันทั้งหมด ดำเนินการต่อ?')) { e.target.value=''; return; }
     const old = Object.keys(db.days);
-    db = Object.assign(structuredClone(DEFAULT), d);
+    db = normalize(d);
     save('settings', ...new Set([...old, ...Object.keys(db.days)])); renderAll(); toast('กู้คืนข้อมูลแล้ว');
   }catch(err){ toast('ไฟล์ไม่ถูกต้อง'); }
   e.target.value='';
